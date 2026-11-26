@@ -1,0 +1,46 @@
+# ---- Dart / Flutter build output & caches ----
+.dart_tool/
+build/
+coverage/
+.packages
+.pub/
+.pub-cache/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec_overrides.yaml
+# Library packages don't commit lock files (the app keeps its pubspec.lock)
+packages/**/pubspec.lock
+
+# ---- Android / iOS local & generated files ----
+local.properties
+**/android/.gradle/
+**/android/captures/
+**/ios/Pods/
+**/ios/.symlinks/
+
+# ---- Python (backend & jobs, Phase 2) ----
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# ---- IDE / OS ----
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+*.log
+
+# ---- Secrets (never commit) ----
+.env
+.env.*
+*.keystore
+*.jks
+key.properties
+google-services.json
+GoogleService-Info.plist
+service-account*.json
+
+# ---- Claude Code local settings (CLAUDE.md IS committed) ----
+.claude/settings.local.json
