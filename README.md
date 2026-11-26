@@ -38,6 +38,7 @@ Core principle: **AI explains, the engine calculates.** Every number comes from 
 | 3 | Investment education & allocation: risk profile, illustrative mix, learn cards | ✅ Phase 1 |
 | 4 | AI financial assistant (Gemini, grounded in your numbers) | ⏳ Phase 2 |
 | 5 | Progress tracker: check-ins, goal progress, net worth | ⏳ Phase 3 |
+| ⚙️ | Settings: edit profile, retake risk quiz, edit goals, export data, delete all data | ✅ Phase 1 |
 
 ---
 
@@ -47,7 +48,7 @@ Core principle: **AI explains, the engine calculates.** Every number comes from 
 Flutter app (on the phone, ~80% of the product)
   ├─ UI + charts
   ├─ finance_engine (Dart): all calculations
-  └─ Encrypted local SQLite (planned)
+  └─ Encrypted local SQLite (drift + SQLite3MultipleCiphers)
           │ HTTPS: only for AI chat, research and market data
           ▼
 Python backend on Google Cloud Run (thin proxy, no user database)   [Phase 2]
@@ -88,6 +89,7 @@ dart test
 # Run the app
 cd ../../app
 flutter pub get
+dart run build_runner build   # only needed after changing database tables
 flutter run
 ```
 
@@ -101,6 +103,13 @@ flutter test
 ```
 
 ---
+
+## Privacy & data
+
+- All personal data is stored **only on the phone**, in a SQLite database encrypted with [SQLite3MultipleCiphers](https://utelle.github.io/SQLite3MultipleCiphers/).
+- The 256-bit key is generated on the device and kept in the Android Keystore / iOS Keychain (`flutter_secure_storage`).
+- Android cloud backup and device-to-device transfer are disabled for app data, so the encrypted file is never separated from its key.
+- Users can **export** their data as JSON and **delete everything** from Settings.
 
 ## Default assumptions
 
@@ -118,7 +127,7 @@ Illustrative only, shown to users on every plan:
 
 ## Roadmap
 
-- **Phase 1:** Finance engine, onboarding, health, goals, allocation, learn. *Next: encrypted local storage, settings, export / delete data.*
+- **Phase 1:** Finance engine, onboarding, health, goals, allocation, learn, encrypted local storage, settings, export / delete data. *Next: polish (expense breakdown, app icon, accessibility).*
 - **Phase 2:** Python backend on Cloud Run, AI assistant (Gemini), daily market-data job.
 - **Phase 3:** Progress tracker, backup, PDF reports.
 - **Phase 4:** Free / Pro / Premium tiers.

@@ -1,13 +1,13 @@
 import 'dart:math' as math;
 
 import 'package:finance_engine/finance_engine.dart';
-import 'package:material_ui/material_ui.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../state/app_state.dart';
 import '../../util/format.dart';
+import '../../widgets/forms.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -26,6 +26,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   ];
 
   int _step = 0;
+  bool _saving = false;
 
   final _age = TextEditingController();
   int _dependents = 0;
@@ -50,40 +51,43 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     super.dispose();
   }
 
-  String? _validate() {
-    switch (_step) {
-      case 0:
-        if (_ageValue < 18 || _ageValue > 70) return 'Please enter an age between 18 and 70.';
-      case 1:
-        if (parseAmount(_income.text) <= 0) return 'Please enter your monthly income.';
-        if (parseAmount(_expenses.text) <= 0) return 'Please enter your monthly expenses.';
-      case 3:
-        if (_risk.length < RiskQuestionnaire.questions.length) {
-          return 'Please answer all the questions.';
-        }
-    }
-    return null;
+  String? _validate() => switch (_step) {
+        0 => validAge(_age.text),
+        1 => parseAmount(_income.text) <= 0
+            ? 'Please enter your monthly income.'
+            : parseAmount(_expenses.text) <= 0
+                ? 'Please enter your monthly expenses.'
+                : null,
+        3 => _risk.length < RiskQuestionnaire.questions.length
+            ? 'Please answer all the questions.'
+            : null,
+        _ => null,
+      };
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _next() {
     final error = _validate();
-    if (error != null) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(error)));
-      return;
-    }
+    if (error != null) return _showError(error);
     if (_step < _stepTitles.length - 1) {
       setState(() {
         _step++;
-        if (_step == 4) _targetAge ??= math.min(_ageValue + 20, 60).clamp(_ageValue + 1, 75);
+        if (_step == 4) {
+          _targetAge ??= math.min(_ageValue + 20, 60).clamp(_ageValue + 1, 75);
+        }
       });
     } else {
       _finish();
     }
   }
 
-  void _finish() {
+  Future<void> _finish() async {
+    if (_saving) return;
+    setState(() => _saving = true);
     final profile = FinancialProfile(
       age: _ageValue,
       monthlyIncome: parseAmount(_income.text),
@@ -96,42 +100,48 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       hasHealthInsurance: _health,
       hasTermInsurance: _term,
     );
-    ref.read(appStateProvider.notifier).completeOnboarding(
-          profile: profile,
-          riskAnswers: Map.of(_risk),
-          fiTargetAge: _targetAge!,
-        );
-    context.go('/');
+    try {
+      await ref.read(appStateProvider.notifier).completeOnboarding(
+            profile: profile,
+            riskAnswers: Map.of(_risk),
+            fiTargetAge: _targetAge!,
+          );
+      if (mounted) context.go('/');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      _showError('Could not save your details. Please try again.');
+    }
   }
 
   void _useSample() {
-    setState(() {
-      _age.text = '25';
-      _dependents = 0;
-      _income.text = '40000';
-      _expenses.text = '25000';
-      _emi.text = '0';
-      _savings.text = '80000';
-      _investments.text = '20000';
-      _loans.text = '0';
-      _health = false;
-      _term = false;
-      for (final q in RiskQuestionnaire.questions) {
-        _risk[q.id] = 1;
-      }
-      _targetAge = 45;
-    });
+    _age.text = '25';
+    _dependents = 0;
+    _income.text = '40000';
+    _expenses.text = '25000';
+    _emi.text = '0';
+    _savings.text = '80000';
+    _investments.text = '20000';
+    _loans.text = '0';
+    _health = false;
+    _term = false;
+    for (final q in RiskQuestionnaire.questions) {
+      _risk[q.id] = 1;
+    }
+    _targetAge = 45;
     _finish();
   }
 
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
+    final last = _step == _stepTitles.length - 1;
     return Scaffold(
       appBar: AppBar(
         title: const Text('WealthWise AI'),
         leading: _step > 0
             ? IconButton(
+                tooltip: 'Back',
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => setState(() => _step--),
               )
@@ -145,8 +155,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  Text('Step ${_step + 1} of ${_stepTitles.length}',
-                      style: t.labelLarge),
+                  Text('Step ${_step + 1} of ${_stepTitles.length}', style: t.labelLarge),
                   const SizedBox(height: 4),
                   Text(_stepTitles[_step], style: t.headlineSmall),
                   const SizedBox(height: 20),
@@ -159,10 +168,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               child: SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: _next,
-                  child: Text(_step == _stepTitles.length - 1
-                      ? 'See my financial plan'
-                      : 'Continue'),
+                  onPressed: _saving ? null : _next,
+                  child: _saving
+                      ? const SizedBox.square(
+                          dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                      : Text(last ? 'See my financial plan' : 'Continue'),
                 ),
               ),
             ),
@@ -176,33 +186,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         0 => _aboutYou(),
         1 => _monthly(),
         2 => _assets(),
-        3 => _riskStep(),
+        3 => [
+            RiskQuestionList(
+              answers: _risk,
+              onAnswer: (id, i) => setState(() => _risk[id] = i),
+            ),
+          ],
         _ => _goalStep(),
       };
 
   List<Widget> _aboutYou() => [
         const _PrivacyBanner(),
         const SizedBox(height: 20),
-        _NumberField(controller: _age, label: 'Your age', money: false),
+        NumberField(controller: _age, label: 'Your age', money: false),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            const Expanded(child: Text('People who depend on your income')),
-            IconButton(
-              onPressed: _dependents > 0 ? () => setState(() => _dependents--) : null,
-              icon: const Icon(Icons.remove_circle_outline),
-            ),
-            Text('$_dependents', style: Theme.of(context).textTheme.titleMedium),
-            IconButton(
-              onPressed: () => setState(() => _dependents++),
-              icon: const Icon(Icons.add_circle_outline),
-            ),
-          ],
+        CounterField(
+          label: 'People who depend on your income',
+          value: _dependents,
+          onChanged: (v) => setState(() => _dependents = v),
         ),
         const SizedBox(height: 24),
         Center(
           child: TextButton.icon(
-            onPressed: _useSample,
+            onPressed: _saving ? null : _useSample,
             icon: const Icon(Icons.auto_awesome_outlined),
             label: const Text('Just exploring? Try with sample data'),
           ),
@@ -210,30 +216,30 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       ];
 
   List<Widget> _monthly() => [
-        _NumberField(controller: _income, label: 'Monthly take-home income'),
+        NumberField(controller: _income, label: 'Monthly take-home income'),
         const SizedBox(height: 16),
-        _NumberField(
+        NumberField(
           controller: _expenses,
           label: 'Monthly expenses',
           helper: 'Rent, food, bills, travel, shopping. Do not include EMIs.',
         ),
         const SizedBox(height: 16),
-        _NumberField(controller: _emi, label: 'Monthly loan EMIs (if any)'),
+        NumberField(controller: _emi, label: 'Monthly loan EMIs (if any)'),
       ];
 
   List<Widget> _assets() => [
-        _NumberField(
+        NumberField(
           controller: _savings,
           label: 'Savings (bank balance, FDs)',
           helper: 'Money you can access quickly in an emergency.',
         ),
         const SizedBox(height: 16),
-        _NumberField(
+        NumberField(
           controller: _investments,
           label: 'Investments (mutual funds, stocks, PPF, etc.)',
         ),
         const SizedBox(height: 16),
-        _NumberField(controller: _loans, label: 'Total loans outstanding'),
+        NumberField(controller: _loans, label: 'Total loans outstanding'),
         const SizedBox(height: 8),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
@@ -250,31 +256,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         ),
       ];
 
-  List<Widget> _riskStep() => [
-        for (final q in RiskQuestionnaire.questions) ...[
-          Text(q.text, style: Theme.of(context).textTheme.titleSmall),
-          const SizedBox(height: 4),
-          for (var i = 0; i < q.options.length; i++)
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              dense: true,
-              leading: Icon(_risk[q.id] == i
-                  ? Icons.radio_button_checked
-                  : Icons.radio_button_unchecked),
-              title: Text(q.options[i].label),
-              onTap: () => setState(() => _risk[q.id] = i),
-            ),
-          const SizedBox(height: 12),
-        ],
-      ];
-
   List<Widget> _goalStep() {
     final t = Theme.of(context).textTheme;
     final minAge = _ageValue + 1;
     final maxAge = math.max(75, minAge + 1);
     final target = _targetAge!.clamp(minAge, maxAge);
     return [
-      Text('At what age would you like to be financially independent, '
+      const Text('At what age would you like to be financially independent, '
           'meaning work becomes optional?'),
       const SizedBox(height: 24),
       Center(child: Text('Age $target', style: t.displaySmall)),
@@ -314,41 +302,11 @@ class _PrivacyBanner extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Your financial details stay on this phone. Approximate numbers are fine.',
+              'Your financial details stay on this phone, encrypted. Approximate numbers are fine.',
               style: TextStyle(color: cs.onPrimaryContainer),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _NumberField extends StatelessWidget {
-  final TextEditingController controller;
-  final String label;
-  final String? helper;
-  final bool money;
-
-  const _NumberField({
-    required this.controller,
-    required this.label,
-    this.helper,
-    this.money = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      keyboardType: TextInputType.number,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      decoration: InputDecoration(
-        labelText: label,
-        helperText: helper,
-        helperMaxLines: 2,
-        prefixText: money ? '₹ ' : null,
-        border: const OutlineInputBorder(),
       ),
     );
   }

@@ -17,7 +17,9 @@ const _addableTypes = [
 ];
 
 class AddGoalSheet extends ConsumerStatefulWidget {
-  const AddGoalSheet({super.key});
+  /// When set, the sheet edits this goal instead of adding a new one.
+  final Goal? existing;
+  const AddGoalSheet({super.key, this.existing});
 
   @override
   ConsumerState<AddGoalSheet> createState() => _AddGoalSheetState();
@@ -25,11 +27,18 @@ class AddGoalSheet extends ConsumerStatefulWidget {
 
 class _AddGoalSheetState extends ConsumerState<AddGoalSheet> {
   final _formKey = GlobalKey<FormState>();
-  GoalType _type = GoalType.house;
-  final _name = TextEditingController(text: goalTypeLabel(GoalType.house));
-  final _cost = TextEditingController();
-  final _years = TextEditingController();
-  final _saved = TextEditingController();
+  late GoalType _type = widget.existing?.type ?? GoalType.house;
+  late final _name =
+      TextEditingController(text: widget.existing?.name ?? goalTypeLabel(_type));
+  late final _cost = TextEditingController(text: _initial(widget.existing?.todayCost));
+  late final _years = TextEditingController(text: _initial(widget.existing?.years));
+  late final _saved =
+      TextEditingController(text: _initial(widget.existing?.alreadySaved));
+
+  bool get _editing => widget.existing != null;
+
+  static String _initial(double? v) =>
+      (v == null || v == 0) ? '' : v.round().toString();
 
   @override
   void dispose() {
@@ -41,8 +50,8 @@ class _AddGoalSheetState extends ConsumerState<AddGoalSheet> {
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
-    ref.read(appStateProvider.notifier).addGoal(Goal(
-          id: DateTime.now().microsecondsSinceEpoch.toString(),
+    ref.read(appStateProvider.notifier).saveGoal(Goal(
+          id: widget.existing?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
           name: _name.text.trim(),
           type: _type,
           todayCost: parseAmount(_cost.text),
@@ -67,7 +76,7 @@ class _AddGoalSheetState extends ConsumerState<AddGoalSheet> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Add a goal', style: Theme.of(context).textTheme.titleLarge),
+              Text(_editing ? 'Edit goal' : 'Add a goal', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
               Wrap(
                 spacing: 8,
@@ -130,7 +139,7 @@ class _AddGoalSheetState extends ConsumerState<AddGoalSheet> {
                 ),
               ),
               const SizedBox(height: 20),
-              FilledButton(onPressed: _save, child: const Text('Add goal')),
+              FilledButton(onPressed: _save, child: Text(_editing ? 'Save changes' : 'Add goal')),
             ],
           ),
         ),

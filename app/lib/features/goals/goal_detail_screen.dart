@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../state/app_state.dart';
 import '../../util/format.dart';
 import '../../widgets/common.dart';
+import 'add_goal_sheet.dart';
 
 class GoalDetailScreen extends ConsumerWidget {
   final String goalId;
@@ -38,15 +39,23 @@ class GoalDetailScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(plan.goal.name),
         actions: [
-          if (!isFi)
+          if (!isFi) ...[
+            IconButton(
+              tooltip: 'Edit goal',
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () => showModalBottomSheet<void>(
+                context: context,
+                isScrollControlled: true,
+                showDragHandle: true,
+                builder: (_) => AddGoalSheet(existing: plan.goal),
+              ),
+            ),
             IconButton(
               tooltip: 'Delete goal',
               icon: const Icon(Icons.delete_outline),
-              onPressed: () {
-                ref.read(appStateProvider.notifier).removeGoal(goalId);
-                Navigator.of(context).pop();
-              },
+              onPressed: () => _confirmDelete(context, ref, plan.goal),
             ),
+          ],
         ],
       ),
       body: ListView(
@@ -152,6 +161,23 @@ class GoalDetailScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+Future<void> _confirmDelete(BuildContext context, WidgetRef ref, Goal goal) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text('Delete "${goal.name}"?'),
+      content: const Text('This goal and its plan will be removed.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete')),
+      ],
+    ),
+  );
+  if (ok != true || !context.mounted) return;
+  Navigator.of(context).pop();
+  await ref.read(appStateProvider.notifier).removeGoal(goal.id);
 }
 
 /// What-if slider: move the financial-independence age.

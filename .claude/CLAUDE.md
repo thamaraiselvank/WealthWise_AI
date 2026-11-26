@@ -1,16 +1,20 @@
 # WealthWise AI — Project Context
 
 > Read this first in every session. It describes what we are building, why, and the decisions already made.
-> Status (2026-11-26): **Phase 1, slice 1 done.** Finance engine (31 tests) + Flutter app with onboarding, health dashboard, goals (FI + custom, with "show the math" and target-age what-if), invest & learn. State is **in-memory only**.
-> Next: slice 2 = encrypted local persistence (drift + SQLCipher), edit profile, settings (export / delete data).
+> Status (2026-11-26): **Phase 1, slices 1–2 done.** Finance engine + Flutter app: onboarding, health dashboard, goals (FI + custom; add/edit/delete; "show the math"; target-age what-if), invest & learn, settings (edit profile, retake risk quiz, export JSON, delete all, about). Data persists in an **encrypted local DB**.
+> Next: slice 3 = polish (expense breakdown by category, app name + icon, large-font / dark-mode checks).
 
 ## 0. Working conventions
 
 - Run tests: `cd packages/finance_engine && dart test` · `cd app && flutter analyze && flutter test`
 - Flutter 3.50: import **`package:material_ui/material_ui.dart`**, never `package:flutter/material.dart` (it is deprecated, and its types clash with material_ui's).
 - All numbers come from `packages/finance_engine`. UI code must not do financial math itself. Add engine tests for any new calculation.
-- App structure: `app/lib/{state, util, widgets, features/<module>}`. State uses Riverpod `Notifier`s in `state/app_state.dart`.
+- App structure: `app/lib/{data, state, util, widgets, features/<module>}`. State uses Riverpod `Notifier`s in `state/app_state.dart`.
 - Every screen with projections or allocations shows the `Disclaimer` widget.
+- **Persistence:** drift tables in `app/lib/data/database.dart` (generated `database.g.dart` is committed; regenerate with `dart run build_runner build`). Only `AppRepository` touches the DB. Schema changes = bump `schemaVersion` + add a migration step + a test.
+- **Encryption:** `sqlite3` is built as SQLite3MultipleCiphers via `hooks: user_defines: sqlite3: source: sqlite3mc` in `app/pubspec.yaml`. Key = 256-bit random hex in `flutter_secure_storage`; `applyEncryptionKey` fails fast if encryption is missing. Android backup is disabled (`allowBackup=false` + `data_extraction_rules.xml`); do not re-enable it.
+- `AppStateNotifier` updates state first, then writes through to the repository. Tests use `newTestRepository()` (in-memory DB) and `pumpApp()` from `app/test/helpers.dart`.
+- Push to GitHub `main` after each completed slice.
 
 ## 1. What WealthWise AI is
 
@@ -81,7 +85,7 @@ Key decisions:
 
 **App (Flutter / Dart)**
 - State: Riverpod · Navigation: go_router · HTTP: dio · Charts: fl_chart
-- Local DB: drift (SQLite) + sqlcipher_flutter_libs (encryption); key in flutter_secure_storage
+- Local DB: drift (SQLite) + SQLite3MultipleCiphers via sqlite3 build hooks (encryption); key in flutter_secure_storage
 - Firebase: App Check (Play Integrity), Anonymous Auth, Remote Config, Crashlytics
 
 **Backend & cloud (Google Cloud, existing subscription)**

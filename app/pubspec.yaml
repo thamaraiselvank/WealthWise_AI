@@ -1,5 +1,5 @@
 name: wealthwise_ai
-description: "A new Flutter project."
+description: "WealthWise AI: personal financial planning and wealth education."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -41,6 +41,12 @@ dependencies:
   intl: ^0.20.3
   finance_engine:
     path: ../packages/finance_engine
+  drift: ^2.35.4
+  sqlite3: ^3.9.2
+  flutter_secure_storage: ^11.2.0
+  path_provider: ^2.1.6
+  path: ^1.9.1
+  share_plus: ^13.3.1
 
 dev_dependencies:
   flutter_test:
@@ -52,6 +58,15 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  drift_dev: ^2.35.3
+  build_runner: ^2.17.1
+
+# Bundle SQLite3MultipleCiphers so the local database is encrypted at rest
+# (see sqlite3 package doc/hook.md). Key comes from flutter_secure_storage.
+hooks:
+  user_defines:
+    sqlite3:
+      source: sqlite3mc
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -98,8 +98,10 @@ class _GoalCard extends StatelessWidget {
                 children: [
                   Icon(Icons.circle, size: 10, color: color),
                   const SizedBox(width: 6),
-                  Text(feasibilityLabel(plan.feasibility),
-                      style: t.labelLarge?.copyWith(color: color)),
+                  Flexible(
+                    child: Text(feasibilityLabel(plan.feasibility),
+                        style: t.labelLarge?.copyWith(color: color)),
+                  ),
                 ],
               ),
             ],
