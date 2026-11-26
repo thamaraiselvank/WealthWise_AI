@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../state/app_state.dart';
 import '../../util/format.dart';
+import '../../widgets/expense_editor.dart';
 import '../../widgets/forms.dart';
 
 class ProfileEditScreen extends ConsumerStatefulWidget {
@@ -20,6 +21,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       _investments, _loans;
   late int _dependents;
   late bool _health, _term;
+  late ExpenseBreakdown? _breakdown = _original.expenseBreakdown;
   bool _saving = false;
 
   TextEditingController _c(num v) => TextEditingController(text: v.round().toString());
@@ -51,14 +53,19 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _saving = true);
     final messenger = ScaffoldMessenger.of(context);
+    if (_breakdown != null && _breakdown!.total <= 0) {
+      messenger.showSnackBar(const SnackBar(
+          content: Text('Enter at least one expense category, or switch the split off.')));
+      return;
+    }
+    setState(() => _saving = true);
     final navigator = Navigator.of(context);
     try {
       await ref.read(appStateProvider.notifier).updateProfile(FinancialProfile(
             age: int.parse(_age.text),
             monthlyIncome: parseAmount(_income.text),
-            monthlyExpenses: parseAmount(_expenses.text),
+            monthlyExpenses: _breakdown?.total ?? parseAmount(_expenses.text),
             monthlyEmi: parseAmount(_emi.text),
             savings: parseAmount(_savings.text),
             investments: parseAmount(_investments.text),
@@ -66,6 +73,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
             dependents: _dependents,
             hasHealthInsurance: _health,
             hasTermInsurance: _term,
+            expenseBreakdown: _breakdown,
           ));
       navigator.pop();
       messenger.showSnackBar(const SnackBar(content: Text('Profile updated')));
@@ -98,10 +106,15 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                 label: 'Monthly take-home income',
                 validator: requiredPositive),
             gap,
-            NumberField(
-              controller: _expenses,
-              label: 'Monthly expenses (excluding EMIs)',
-              validator: requiredPositive,
+            if (_breakdown == null)
+              NumberField(
+                controller: _expenses,
+                label: 'Monthly expenses (excluding EMIs)',
+                validator: requiredPositive,
+              ),
+            ExpenseBreakdownEditor(
+              initial: _breakdown,
+              onChanged: (b) => setState(() => _breakdown = b),
             ),
             gap,
             NumberField(controller: _emi, label: 'Monthly loan EMIs'),

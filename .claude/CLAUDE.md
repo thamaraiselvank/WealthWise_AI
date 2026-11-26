@@ -1,8 +1,9 @@
 # WealthWise AI — Project Context
 
 > Read this first in every session. It describes what we are building, why, and the decisions already made.
-> Status (2026-11-26): **Phase 1, slices 1–2 done.** Finance engine + Flutter app: onboarding, health dashboard, goals (FI + custom; add/edit/delete; "show the math"; target-age what-if), invest & learn, settings (edit profile, retake risk quiz, export JSON, delete all, about). Data persists in an **encrypted local DB**.
-> Next: slice 3 = polish (expense breakdown by category, app name + icon, large-font / dark-mode checks).
+> Status (2026-11-26): **Phase 1 complete (slices 1–3).** Finance engine + Flutter app: onboarding, health dashboard with expense breakdown + insights, goals (FI + custom; add/edit/delete; "show the math"; target-age what-if), invest & learn, settings (edit profile, retake risk quiz, export JSON, delete all, about). Encrypted local DB (schema v2). App name + launcher icon. Every screen tested at 200% text and in dark mode.
+> Not yet verified on a real device: `app/integration_test/encrypted_storage_test.dart` (the user's PC needs the Android Emulator hypervisor driver; or run on a USB phone).
+> Next: Phase 2 = Python backend on Cloud Run + AI assistant (Gemini) + daily market-data job.
 
 ## 0. Working conventions
 
@@ -11,7 +12,10 @@
 - All numbers come from `packages/finance_engine`. UI code must not do financial math itself. Add engine tests for any new calculation.
 - App structure: `app/lib/{data, state, util, widgets, features/<module>}`. State uses Riverpod `Notifier`s in `state/app_state.dart`.
 - Every screen with projections or allocations shows the `Disclaimer` widget.
-- **Persistence:** drift tables in `app/lib/data/database.dart` (generated `database.g.dart` is committed; regenerate with `dart run build_runner build`). Only `AppRepository` touches the DB. Schema changes = bump `schemaVersion` + add a migration step + a test.
+- **Persistence:** drift tables in `app/lib/data/database.dart` (generated `database.g.dart` is committed; regenerate with `dart run build_runner build`). Only `AppRepository` touches the DB. **Schema change checklist:** edit tables → bump `schemaVersion` → add an `onUpgrade` step → `dart run build_runner build` → `dart run drift_dev schema dump lib/data/database.dart drift_schemas/` → `dart run drift_dev schema generate drift_schemas/ test/generated_migrations/` → add a case to `test/data/migration_test.dart`. Never edit old `drift_schemas/*.json`.
+- **UI robustness:** `test/accessibility_test.dart` visits every screen at 200% text on a 360×740 phone and in dark mode. New screens must be added there; every scrollable page must actually scroll (no fixed-height Columns).
+- **Icon:** `dart run tool/generate_icon.dart` then `dart run flutter_launcher_icons` (inside `app/`).
+- **Windows build note:** `kotlin.incremental=false` in `android/gradle.properties` is required (project on F:, pub cache on C:).
 - **Encryption:** `sqlite3` is built as SQLite3MultipleCiphers via `hooks: user_defines: sqlite3: source: sqlite3mc` in `app/pubspec.yaml`. Key = 256-bit random hex in `flutter_secure_storage`; `applyEncryptionKey` fails fast if encryption is missing. Android backup is disabled (`allowBackup=false` + `data_extraction_rules.xml`); do not re-enable it.
 - `AppStateNotifier` updates state first, then writes through to the repository. Tests use `newTestRepository()` (in-memory DB) and `pumpApp()` from `app/test/helpers.dart`.
 - Push to GitHub `main` after each completed slice.

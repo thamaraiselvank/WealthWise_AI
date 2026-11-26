@@ -17,6 +17,9 @@ class Profiles extends Table {
   IntColumn get dependents => integer().withDefault(const Constant(0))();
   BoolColumn get hasHealthInsurance => boolean().withDefault(const Constant(false))();
   BoolColumn get hasTermInsurance => boolean().withDefault(const Constant(false))();
+
+  /// JSON map of ExpenseCategory name -> monthly amount (added in schema v2).
+  TextColumn get expenseBreakdown => text().nullable()();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
@@ -52,11 +55,17 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          // v1 -> v2: optional expense breakdown on the profile.
+          if (from < 2) {
+            await m.addColumn(profiles, profiles.expenseBreakdown);
+          }
+        },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON');
         },

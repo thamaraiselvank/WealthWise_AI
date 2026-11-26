@@ -152,6 +152,44 @@ void main() {
     expect((await repo.load()).isOnboarded, isFalse);
   });
 
+  testWidgets('expense breakdown sets expenses and shows insights', (tester) async {
+    final repo = newTestRepository();
+    await pumpApp(tester, repo);
+    await onboardWithSample(tester);
+    expect(find.text('Add expense breakdown'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Settings'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Edit financial details'));
+    await tester.pumpAndSettle();
+
+    final top = find.byType(Scrollable).last;
+    await tester.scrollUntilVisible(find.text('Split my expenses by category'), 200, scrollable: top);
+    await tester.tap(find.text('Split my expenses by category'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextFormField, 'Rent / housing'), '15000');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Food & groceries'), '6000');
+    await tester.scrollUntilVisible(find.widgetWithText(TextFormField, 'Shopping, eating out, fun'), 200,
+        scrollable: top);
+    await tester.enterText(find.widgetWithText(TextFormField, 'Shopping, eating out, fun'), '4000');
+    await tester.pump();
+    expect(find.text('Total monthly expenses: ₹25,000'), findsOneWidget);
+
+    await tester.scrollUntilVisible(find.text('Save changes'), 200, scrollable: top);
+    await tester.tap(find.text('Save changes'));
+    await tester.pumpAndSettle();
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    final saved = (await repo.load()).profile!;
+    expect(saved.monthlyExpenses, 25000);
+    expect(saved.expenseBreakdown!.total, 25000);
+
+    await tester.scrollUntilVisible(find.text('Where your money goes'), 300,
+        scrollable: find.byType(Scrollable).last);
+    expect(find.text('Housing is 38% of income'), findsOneWidget);
+  });
+
   testWidgets('onboarding blocks invalid age', (tester) async {
     await pumpApp(tester, newTestRepository());
     await tester.tap(find.text('Continue'));

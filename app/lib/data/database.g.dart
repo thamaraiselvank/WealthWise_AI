@@ -138,6 +138,17 @@ class $ProfilesTable extends Profiles
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _expenseBreakdownMeta = const VerificationMeta(
+    'expenseBreakdown',
+  );
+  @override
+  late final GeneratedColumn<String> expenseBreakdown = GeneratedColumn<String>(
+    'expense_breakdown',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -163,6 +174,7 @@ class $ProfilesTable extends Profiles
     dependents,
     hasHealthInsurance,
     hasTermInsurance,
+    expenseBreakdown,
     updatedAt,
   ];
   @override
@@ -264,6 +276,15 @@ class $ProfilesTable extends Profiles
         ),
       );
     }
+    if (data.containsKey('expense_breakdown')) {
+      context.handle(
+        _expenseBreakdownMeta,
+        expenseBreakdown.isAcceptableOrUnknown(
+          data['expense_breakdown']!,
+          _expenseBreakdownMeta,
+        ),
+      );
+    }
     if (data.containsKey('updated_at')) {
       context.handle(
         _updatedAtMeta,
@@ -323,6 +344,10 @@ class $ProfilesTable extends Profiles
         DriftSqlType.bool,
         data['${effectivePrefix}has_term_insurance'],
       )!,
+      expenseBreakdown: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}expense_breakdown'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -348,6 +373,9 @@ class ProfileRow extends DataClass implements Insertable<ProfileRow> {
   final int dependents;
   final bool hasHealthInsurance;
   final bool hasTermInsurance;
+
+  /// JSON map of ExpenseCategory name -> monthly amount (added in schema v2).
+  final String? expenseBreakdown;
   final DateTime updatedAt;
   const ProfileRow({
     required this.id,
@@ -361,6 +389,7 @@ class ProfileRow extends DataClass implements Insertable<ProfileRow> {
     required this.dependents,
     required this.hasHealthInsurance,
     required this.hasTermInsurance,
+    this.expenseBreakdown,
     required this.updatedAt,
   });
   @override
@@ -377,6 +406,9 @@ class ProfileRow extends DataClass implements Insertable<ProfileRow> {
     map['dependents'] = Variable<int>(dependents);
     map['has_health_insurance'] = Variable<bool>(hasHealthInsurance);
     map['has_term_insurance'] = Variable<bool>(hasTermInsurance);
+    if (!nullToAbsent || expenseBreakdown != null) {
+      map['expense_breakdown'] = Variable<String>(expenseBreakdown);
+    }
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
@@ -394,6 +426,9 @@ class ProfileRow extends DataClass implements Insertable<ProfileRow> {
       dependents: Value(dependents),
       hasHealthInsurance: Value(hasHealthInsurance),
       hasTermInsurance: Value(hasTermInsurance),
+      expenseBreakdown: expenseBreakdown == null && nullToAbsent
+          ? const Value.absent()
+          : Value(expenseBreakdown),
       updatedAt: Value(updatedAt),
     );
   }
@@ -415,6 +450,7 @@ class ProfileRow extends DataClass implements Insertable<ProfileRow> {
       dependents: serializer.fromJson<int>(json['dependents']),
       hasHealthInsurance: serializer.fromJson<bool>(json['hasHealthInsurance']),
       hasTermInsurance: serializer.fromJson<bool>(json['hasTermInsurance']),
+      expenseBreakdown: serializer.fromJson<String?>(json['expenseBreakdown']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -433,6 +469,7 @@ class ProfileRow extends DataClass implements Insertable<ProfileRow> {
       'dependents': serializer.toJson<int>(dependents),
       'hasHealthInsurance': serializer.toJson<bool>(hasHealthInsurance),
       'hasTermInsurance': serializer.toJson<bool>(hasTermInsurance),
+      'expenseBreakdown': serializer.toJson<String?>(expenseBreakdown),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -449,6 +486,7 @@ class ProfileRow extends DataClass implements Insertable<ProfileRow> {
     int? dependents,
     bool? hasHealthInsurance,
     bool? hasTermInsurance,
+    Value<String?> expenseBreakdown = const Value.absent(),
     DateTime? updatedAt,
   }) => ProfileRow(
     id: id ?? this.id,
@@ -462,6 +500,9 @@ class ProfileRow extends DataClass implements Insertable<ProfileRow> {
     dependents: dependents ?? this.dependents,
     hasHealthInsurance: hasHealthInsurance ?? this.hasHealthInsurance,
     hasTermInsurance: hasTermInsurance ?? this.hasTermInsurance,
+    expenseBreakdown: expenseBreakdown.present
+        ? expenseBreakdown.value
+        : this.expenseBreakdown,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   ProfileRow copyWithCompanion(ProfilesCompanion data) {
@@ -493,6 +534,9 @@ class ProfileRow extends DataClass implements Insertable<ProfileRow> {
       hasTermInsurance: data.hasTermInsurance.present
           ? data.hasTermInsurance.value
           : this.hasTermInsurance,
+      expenseBreakdown: data.expenseBreakdown.present
+          ? data.expenseBreakdown.value
+          : this.expenseBreakdown,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -511,6 +555,7 @@ class ProfileRow extends DataClass implements Insertable<ProfileRow> {
           ..write('dependents: $dependents, ')
           ..write('hasHealthInsurance: $hasHealthInsurance, ')
           ..write('hasTermInsurance: $hasTermInsurance, ')
+          ..write('expenseBreakdown: $expenseBreakdown, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -529,6 +574,7 @@ class ProfileRow extends DataClass implements Insertable<ProfileRow> {
     dependents,
     hasHealthInsurance,
     hasTermInsurance,
+    expenseBreakdown,
     updatedAt,
   );
   @override
@@ -546,6 +592,7 @@ class ProfileRow extends DataClass implements Insertable<ProfileRow> {
           other.dependents == this.dependents &&
           other.hasHealthInsurance == this.hasHealthInsurance &&
           other.hasTermInsurance == this.hasTermInsurance &&
+          other.expenseBreakdown == this.expenseBreakdown &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -561,6 +608,7 @@ class ProfilesCompanion extends UpdateCompanion<ProfileRow> {
   final Value<int> dependents;
   final Value<bool> hasHealthInsurance;
   final Value<bool> hasTermInsurance;
+  final Value<String?> expenseBreakdown;
   final Value<DateTime> updatedAt;
   const ProfilesCompanion({
     this.id = const Value.absent(),
@@ -574,6 +622,7 @@ class ProfilesCompanion extends UpdateCompanion<ProfileRow> {
     this.dependents = const Value.absent(),
     this.hasHealthInsurance = const Value.absent(),
     this.hasTermInsurance = const Value.absent(),
+    this.expenseBreakdown = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
   ProfilesCompanion.insert({
@@ -588,6 +637,7 @@ class ProfilesCompanion extends UpdateCompanion<ProfileRow> {
     this.dependents = const Value.absent(),
     this.hasHealthInsurance = const Value.absent(),
     this.hasTermInsurance = const Value.absent(),
+    this.expenseBreakdown = const Value.absent(),
     this.updatedAt = const Value.absent(),
   }) : age = Value(age),
        monthlyIncome = Value(monthlyIncome),
@@ -604,6 +654,7 @@ class ProfilesCompanion extends UpdateCompanion<ProfileRow> {
     Expression<int>? dependents,
     Expression<bool>? hasHealthInsurance,
     Expression<bool>? hasTermInsurance,
+    Expression<String>? expenseBreakdown,
     Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
@@ -619,6 +670,7 @@ class ProfilesCompanion extends UpdateCompanion<ProfileRow> {
       if (hasHealthInsurance != null)
         'has_health_insurance': hasHealthInsurance,
       if (hasTermInsurance != null) 'has_term_insurance': hasTermInsurance,
+      if (expenseBreakdown != null) 'expense_breakdown': expenseBreakdown,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
@@ -635,6 +687,7 @@ class ProfilesCompanion extends UpdateCompanion<ProfileRow> {
     Value<int>? dependents,
     Value<bool>? hasHealthInsurance,
     Value<bool>? hasTermInsurance,
+    Value<String?>? expenseBreakdown,
     Value<DateTime>? updatedAt,
   }) {
     return ProfilesCompanion(
@@ -649,6 +702,7 @@ class ProfilesCompanion extends UpdateCompanion<ProfileRow> {
       dependents: dependents ?? this.dependents,
       hasHealthInsurance: hasHealthInsurance ?? this.hasHealthInsurance,
       hasTermInsurance: hasTermInsurance ?? this.hasTermInsurance,
+      expenseBreakdown: expenseBreakdown ?? this.expenseBreakdown,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
@@ -689,6 +743,9 @@ class ProfilesCompanion extends UpdateCompanion<ProfileRow> {
     if (hasTermInsurance.present) {
       map['has_term_insurance'] = Variable<bool>(hasTermInsurance.value);
     }
+    if (expenseBreakdown.present) {
+      map['expense_breakdown'] = Variable<String>(expenseBreakdown.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
@@ -709,6 +766,7 @@ class ProfilesCompanion extends UpdateCompanion<ProfileRow> {
           ..write('dependents: $dependents, ')
           ..write('hasHealthInsurance: $hasHealthInsurance, ')
           ..write('hasTermInsurance: $hasTermInsurance, ')
+          ..write('expenseBreakdown: $expenseBreakdown, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -1408,6 +1466,7 @@ typedef $$ProfilesTableCreateCompanionBuilder = ProfilesCompanion Function({
   Value<int> dependents,
   Value<bool> hasHealthInsurance,
   Value<bool> hasTermInsurance,
+  Value<String?> expenseBreakdown,
   Value<DateTime> updatedAt,
 });
 typedef $$ProfilesTableUpdateCompanionBuilder = ProfilesCompanion Function({
@@ -1422,6 +1481,7 @@ typedef $$ProfilesTableUpdateCompanionBuilder = ProfilesCompanion Function({
   Value<int> dependents,
   Value<bool> hasHealthInsurance,
   Value<bool> hasTermInsurance,
+  Value<String?> expenseBreakdown,
   Value<DateTime> updatedAt,
 });
 
@@ -1486,6 +1546,11 @@ class $$ProfilesTableFilterComposer
 
   ColumnFilters<bool> get hasTermInsurance => $composableBuilder(
     column: $table.hasTermInsurance,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get expenseBreakdown => $composableBuilder(
+    column: $table.expenseBreakdown,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1559,6 +1624,11 @@ class $$ProfilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get expenseBreakdown => $composableBuilder(
+    column: $table.expenseBreakdown,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -1623,6 +1693,11 @@ class $$ProfilesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get expenseBreakdown => $composableBuilder(
+    column: $table.expenseBreakdown,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
@@ -1669,6 +1744,7 @@ class $$ProfilesTableTableManager
                 Value<int> dependents = const Value.absent(),
                 Value<bool> hasHealthInsurance = const Value.absent(),
                 Value<bool> hasTermInsurance = const Value.absent(),
+                Value<String?> expenseBreakdown = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
               }) => ProfilesCompanion(
                 id: id,
@@ -1682,6 +1758,7 @@ class $$ProfilesTableTableManager
                 dependents: dependents,
                 hasHealthInsurance: hasHealthInsurance,
                 hasTermInsurance: hasTermInsurance,
+                expenseBreakdown: expenseBreakdown,
                 updatedAt: updatedAt,
               ),
           createCompanionCallback:
@@ -1697,6 +1774,7 @@ class $$ProfilesTableTableManager
                 Value<int> dependents = const Value.absent(),
                 Value<bool> hasHealthInsurance = const Value.absent(),
                 Value<bool> hasTermInsurance = const Value.absent(),
+                Value<String?> expenseBreakdown = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
               }) => ProfilesCompanion.insert(
                 id: id,
@@ -1710,6 +1788,7 @@ class $$ProfilesTableTableManager
                 dependents: dependents,
                 hasHealthInsurance: hasHealthInsurance,
                 hasTermInsurance: hasTermInsurance,
+                expenseBreakdown: expenseBreakdown,
                 updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0

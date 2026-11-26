@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../state/app_state.dart';
 import '../../util/format.dart';
+import '../../widgets/expense_editor.dart';
 import '../../widgets/forms.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -40,8 +41,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   bool _term = false;
   final Map<String, int> _risk = {};
   int? _targetAge;
+  ExpenseBreakdown? _breakdown;
 
   int get _ageValue => int.tryParse(_age.text) ?? 0;
+
+  /// The category total when a breakdown is used, otherwise the single field.
+  double get _expensesValue => _breakdown?.total ?? parseAmount(_expenses.text);
 
   @override
   void dispose() {
@@ -55,7 +60,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         0 => validAge(_age.text),
         1 => parseAmount(_income.text) <= 0
             ? 'Please enter your monthly income.'
-            : parseAmount(_expenses.text) <= 0
+            : _expensesValue <= 0
                 ? 'Please enter your monthly expenses.'
                 : null,
         3 => _risk.length < RiskQuestionnaire.questions.length
@@ -91,7 +96,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final profile = FinancialProfile(
       age: _ageValue,
       monthlyIncome: parseAmount(_income.text),
-      monthlyExpenses: parseAmount(_expenses.text),
+      monthlyExpenses: _expensesValue,
       monthlyEmi: parseAmount(_emi.text),
       savings: parseAmount(_savings.text),
       investments: parseAmount(_investments.text),
@@ -99,6 +104,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       dependents: _dependents,
       hasHealthInsurance: _health,
       hasTermInsurance: _term,
+      expenseBreakdown: _breakdown,
     );
     try {
       await ref.read(appStateProvider.notifier).completeOnboarding(
@@ -153,6 +159,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             LinearProgressIndicator(value: (_step + 1) / _stepTitles.length),
             Expanded(
               child: ListView(
+                key: ValueKey(_step), // each step starts scrolled to the top
                 padding: const EdgeInsets.all(20),
                 children: [
                   Text('Step ${_step + 1} of ${_stepTitles.length}', style: t.labelLarge),
@@ -218,10 +225,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   List<Widget> _monthly() => [
         NumberField(controller: _income, label: 'Monthly take-home income'),
         const SizedBox(height: 16),
-        NumberField(
-          controller: _expenses,
-          label: 'Monthly expenses',
-          helper: 'Rent, food, bills, travel, shopping. Do not include EMIs.',
+        if (_breakdown == null) ...[
+          NumberField(
+            controller: _expenses,
+            label: 'Monthly expenses',
+            helper: 'Rent, food, bills, travel, shopping. Do not include EMIs.',
+          ),
+          const SizedBox(height: 4),
+        ],
+        ExpenseBreakdownEditor(
+          initial: _breakdown,
+          onChanged: (b) => setState(() => _breakdown = b),
         ),
         const SizedBox(height: 16),
         NumberField(controller: _emi, label: 'Monthly loan EMIs (if any)'),

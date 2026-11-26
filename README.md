@@ -33,7 +33,7 @@ Core principle: **AI explains, the engine calculates.** Every number comes from 
 | # | Module | Status |
 |---|---|---|
 | 0 | Onboarding & profile | ✅ Phase 1 |
-| 1 | Financial health analyzer: score, savings rate, emergency fund, debt load, next steps | ✅ Phase 1 |
+| 1 | Financial health analyzer: score, savings rate, emergency fund, debt load, expense breakdown & insights, next steps | ✅ Phase 1 |
 | 2 | Goal-based planner: FI / retirement + custom goals, inflation-adjusted SIPs, "show the math", what-if | ✅ Phase 1 |
 | 3 | Investment education & allocation: risk profile, illustrative mix, learn cards | ✅ Phase 1 |
 | 4 | AI financial assistant (Gemini, grounded in your numbers) | ⏳ Phase 2 |
@@ -102,6 +102,13 @@ flutter analyze
 flutter test
 ```
 
+**What the tests cover:** finance engine math (`packages/finance_engine/test`), database round-trips, encryption (wrong or missing key cannot read data), schema migrations, every user flow, and every screen at 200% text size on a small phone and in dark mode.
+
+```bash
+# On-device check of encrypted storage (needs an emulator or phone)
+flutter test integration_test -d <device-id>
+```
+
 ---
 
 ## Privacy & data
@@ -127,7 +134,7 @@ Illustrative only, shown to users on every plan:
 
 ## Roadmap
 
-- **Phase 1:** Finance engine, onboarding, health, goals, allocation, learn, encrypted local storage, settings, export / delete data. *Next: polish (expense breakdown, app icon, accessibility).*
+- **Phase 1 ✅:** Finance engine, onboarding, health (with expense breakdown), goals, allocation, learn, encrypted local storage, settings, export / delete data, app icon, large-text and dark-mode support.
 - **Phase 2:** Python backend on Cloud Run, AI assistant (Gemini), daily market-data job.
 - **Phase 3:** Progress tracker, backup, PDF reports.
 - **Phase 4:** Free / Pro / Premium tiers.

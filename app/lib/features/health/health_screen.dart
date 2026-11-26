@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../state/app_state.dart';
 import '../../util/format.dart';
 import '../../widgets/common.dart';
+import 'spending_card.dart';
 
 class HealthScreen extends ConsumerWidget {
   const HealthScreen({super.key});
@@ -58,6 +59,7 @@ class HealthScreen extends ConsumerWidget {
             ],
           ),
         ),
+        const SpendingCard(),
         SectionCard(
           title: 'Emergency fund',
           child: _EmergencyFund(report: report),

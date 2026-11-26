@@ -19,7 +19,7 @@ class ComingSoonScreen extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,

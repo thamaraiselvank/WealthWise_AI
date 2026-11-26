@@ -61,3 +61,37 @@ Color feasibilityColor(Feasibility f, ColorScheme cs) => switch (f) {
       Feasibility.stretch => Colors.orange.shade700,
       Feasibility.notFeasible => cs.error,
     };
+
+String expenseLabel(ExpenseCategory c) => switch (c) {
+      ExpenseCategory.housing => 'Rent / housing',
+      ExpenseCategory.food => 'Food & groceries',
+      ExpenseCategory.transport => 'Transport',
+      ExpenseCategory.utilities => 'Bills & utilities',
+      ExpenseCategory.health => 'Health',
+      ExpenseCategory.education => 'Education',
+      ExpenseCategory.lifestyle => 'Shopping, eating out, fun',
+      ExpenseCategory.other => 'Other',
+    };
+
+IconData expenseIcon(ExpenseCategory c) => switch (c) {
+      ExpenseCategory.housing => Icons.home_outlined,
+      ExpenseCategory.food => Icons.restaurant_outlined,
+      ExpenseCategory.transport => Icons.directions_bus_outlined,
+      ExpenseCategory.utilities => Icons.bolt_outlined,
+      ExpenseCategory.health => Icons.medical_services_outlined,
+      ExpenseCategory.education => Icons.school_outlined,
+      ExpenseCategory.lifestyle => Icons.shopping_bag_outlined,
+      ExpenseCategory.other => Icons.more_horiz,
+    };
+
+/// Distinct, colour-blind-friendlier palette for expense charts.
+Color expenseColor(ExpenseCategory c) => switch (c) {
+      ExpenseCategory.housing => const Color(0xFF0F766E),
+      ExpenseCategory.food => const Color(0xFFE69F00),
+      ExpenseCategory.transport => const Color(0xFF3B82F6),
+      ExpenseCategory.utilities => const Color(0xFF8B5CF6),
+      ExpenseCategory.health => const Color(0xFFD55E00),
+      ExpenseCategory.education => const Color(0xFF009E73),
+      ExpenseCategory.lifestyle => const Color(0xFFCC79A7),
+      ExpenseCategory.other => const Color(0xFF94A3B8),
+    };

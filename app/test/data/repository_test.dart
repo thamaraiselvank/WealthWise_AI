@@ -59,6 +59,18 @@ void main() {
       expect(s.fiTargetAge, 45);
     });
 
+    test('expense breakdown round-trips and can be cleared', () async {
+      final b = ExpenseBreakdown({ExpenseCategory.housing: 12000, ExpenseCategory.food: 6000});
+      await repo.saveProfile(FinancialProfile(
+          age: 30, monthlyIncome: 50000, monthlyExpenses: 18000, expenseBreakdown: b));
+      expect((await repo.load()).profile!.expenseBreakdown, b);
+      expect(((await repo.exportData())['profile'] as Map)['expenseBreakdown'],
+          {'housing': 12000.0, 'food': 6000.0});
+
+      await repo.saveProfile(_profile);
+      expect((await repo.load()).profile!.expenseBreakdown, isNull);
+    });
+
     test('goals: insert, update, delete, keep order', () async {
       await repo.saveProfile(_profile);
       await repo.upsertGoal(_goal);

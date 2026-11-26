@@ -67,6 +67,7 @@ class AppRepository {
             dependents: Value(p.dependents),
             hasHealthInsurance: Value(p.hasHealthInsurance),
             hasTermInsurance: Value(p.hasTermInsurance),
+            expenseBreakdown: Value(_encodeBreakdown(p.expenseBreakdown)),
             updatedAt: Value(DateTime.now()),
           ));
 
@@ -120,6 +121,7 @@ class AppRepository {
               'dependents': p.dependents,
               'hasHealthInsurance': p.hasHealthInsurance,
               'hasTermInsurance': p.hasTermInsurance,
+              'expenseBreakdown': p.expenseBreakdown?.toJson(),
             },
       'riskAnswers': s.riskAnswers,
       'riskProfile': s.risk.name,
@@ -163,7 +165,21 @@ class AppRepository {
         dependents: r.dependents,
         hasHealthInsurance: r.hasHealthInsurance,
         hasTermInsurance: r.hasTermInsurance,
+        expenseBreakdown: _decodeBreakdown(r.expenseBreakdown),
       );
+
+  static String? _encodeBreakdown(ExpenseBreakdown? b) =>
+      (b == null || b.isEmpty) ? null : jsonEncode(b.toJson());
+
+  static ExpenseBreakdown? _decodeBreakdown(String? json) {
+    if (json == null) return null;
+    try {
+      final b = ExpenseBreakdown.fromJson(jsonDecode(json) as Map<String, dynamic>);
+      return b.isEmpty ? null : b;
+    } on FormatException {
+      return null;
+    }
+  }
 
   static Goal _toGoal(GoalRow r) => Goal(
         id: r.id,

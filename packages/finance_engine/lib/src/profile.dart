@@ -1,3 +1,5 @@
+import 'expenses.dart';
+
 /// The user's financial snapshot, collected during onboarding.
 ///
 /// All amounts are in rupees. Monthly values are per month.
@@ -22,6 +24,10 @@ class FinancialProfile {
   final bool hasHealthInsurance;
   final bool hasTermInsurance;
 
+  /// Optional split of [monthlyExpenses] by category. When present, its
+  /// total is expected to equal [monthlyExpenses].
+  final ExpenseBreakdown? expenseBreakdown;
+
   const FinancialProfile({
     required this.age,
     required this.monthlyIncome,
@@ -33,6 +39,7 @@ class FinancialProfile {
     this.dependents = 0,
     this.hasHealthInsurance = false,
     this.hasTermInsurance = false,
+    this.expenseBreakdown,
   });
 
   /// Money left after expenses and EMIs.

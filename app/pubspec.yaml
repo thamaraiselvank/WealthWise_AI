@@ -60,6 +60,10 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   drift_dev: ^2.35.3
   build_runner: ^2.17.1
+  flutter_launcher_icons: 0.14.4
+  image: 4.5.0
+  integration_test:
+    sdk: flutter
 
 # Bundle SQLite3MultipleCiphers so the local database is encrypted at rest
 # (see sqlite3 package doc/hook.md). Key comes from flutter_secure_storage.
@@ -109,3 +113,14 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Launcher icons: regenerate with `dart run tool/generate_icon.dart` then
+# `dart run flutter_launcher_icons`.
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/icon/icon.png"
+  remove_alpha_ios: true
+  adaptive_icon_background: "#0F766E"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  min_sdk_android: 21

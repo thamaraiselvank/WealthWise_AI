@@ -3,6 +3,7 @@ library;
 
 export 'src/allocation.dart';
 export 'src/assumptions.dart';
+export 'src/expenses.dart';
 export 'src/goals.dart';
 export 'src/health.dart';
 export 'src/money_math.dart';
