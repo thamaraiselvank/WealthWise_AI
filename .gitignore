@@ -44,3 +44,8 @@ service-account*.json
 
 # ---- Claude Code local settings (CLAUDE.md IS committed) ----
 .claude/settings.local.json
+
+# ---- Built APKs for sharing (never commit) ----
+dist/
+*.apk
+*.aab
