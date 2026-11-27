@@ -2,6 +2,9 @@ import 'package:finance_engine/finance_engine.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'package:wealthwise_ai/features/assistant/chat_controller.dart';
+import 'package:wealthwise_ai/features/assistant/chat_models.dart';
+
 import 'helpers.dart';
 
 /// Visits every screen. Any layout overflow throws and fails the test, so
@@ -53,7 +56,26 @@ Future<void> visitAllScreens(
     years: 14,
     alreadySaved: 200000,
   ));
-  await pumpApp(tester, repo, size: size, textScale: textScale, themeMode: themeMode);
+  final api = FakeAssistantApi([
+    const ChatReply(isToolCalls: true, asOf: '2026-11-27', toolCalls: [
+      ToolCall(id: 'c1', name: 'get_health_report'),
+      ToolCall(id: 'c2', name: 'plan_independence', args: {'target_age': 50}),
+    ]),
+    const ChatReply(
+      isToolCalls: false,
+      asOf: '2026-11-27',
+      text: 'Your health score is fair. The biggest lever is clearing the credit card '
+          'first, then building the emergency fund, then raising your SIP every year.',
+      sources: [Source('Reserve Bank of India: monetary policy statement', 'https://rbi.org.in/x')],
+      disclaimer: 'For education only, not investment advice.',
+      remainingQuestions: 99,
+    ),
+  ]);
+  await pumpApp(tester, repo,
+      size: size,
+      textScale: textScale,
+      themeMode: themeMode,
+      overrides: [assistantApiProvider.overrideWithValue(api)]);
 
   Future<void> scrollThrough() async {
     if (pageScrollable().evaluate().isEmpty) return;
@@ -74,6 +96,21 @@ Future<void> visitAllScreens(
     await tester.pumpAndSettle();
     await scrollThrough();
   }
+
+  // Ask AI: consent, then a tool-backed answer with sources and the math sheet.
+  await tester.tap(find.text('Ask AI').last);
+  await tester.pumpAndSettle();
+  await tapVisible(tester, find.text('I agree, start'));
+  await tester.pumpAndSettle();
+  await tapVisible(tester, find.text('How am I doing financially?'));
+  await tester.pumpAndSettle();
+  await scrollThrough();
+  await tapVisible(tester, find.text('Show the math: Independence plan'));
+  await tester.pumpAndSettle();
+  await tester.drag(find.byType(DraggableScrollableSheet), const Offset(0, -500));
+  await tester.pumpAndSettle();
+  await tester.tapAt(const Offset(10, 10)); // dismiss the sheet
+  await tester.pumpAndSettle();
 
   // Goal details: the FI goal and the custom goal.
   await tester.tap(find.text('Goals').last);

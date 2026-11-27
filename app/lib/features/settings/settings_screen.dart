@@ -65,6 +65,13 @@ class SettingsScreen extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/settings/assumptions'),
           ),
+          SwitchListTile(
+            secondary: const Icon(Icons.chat_bubble_outline),
+            title: const Text('AI assistant'),
+            subtitle: const Text('Allow sending numbers-only summaries with your questions'),
+            value: s.aiConsent,
+            onChanged: (v) => ref.read(appStateProvider.notifier).setAiConsent(v),
+          ),
           const _Header('Your data'),
           ListTile(
             leading: const Icon(Icons.ios_share),

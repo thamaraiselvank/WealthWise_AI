@@ -47,7 +47,8 @@ class AboutScreen extends ConsumerWidget {
                 Text('• It does not sell financial products or earn commissions.'),
                 Text('• It does not recommend specific funds, stocks or schemes.'),
                 Text('• It does not hold or move your money.'),
-                Text('• It does not send your financial details to any server.'),
+                Text('• It does not store your financial details on any server. The AI '
+                    'assistant (only if you allow it) receives numbers, never names.'),
               ],
             ),
           ),

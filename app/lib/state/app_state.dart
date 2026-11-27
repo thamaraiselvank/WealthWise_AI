@@ -17,6 +17,9 @@ class AppState {
   /// The user's planning assumptions (defaults unless edited in Settings).
   final Assumptions assumptions;
 
+  /// The user agreed to send numbers-only summaries to the AI assistant.
+  final bool aiConsent;
+
   const AppState({
     this.profile,
     this.riskAnswers = const {},
@@ -24,6 +27,7 @@ class AppState {
     this.fiTargetAge = 55,
     this.goals = const [],
     this.assumptions = Assumptions.standard,
+    this.aiConsent = false,
   });
 
   bool get isOnboarded => profile != null;
@@ -35,6 +39,7 @@ class AppState {
     int? fiTargetAge,
     List<Goal>? goals,
     Assumptions? assumptions,
+    bool? aiConsent,
   }) =>
       AppState(
         profile: profile ?? this.profile,
@@ -43,6 +48,7 @@ class AppState {
         fiTargetAge: fiTargetAge ?? this.fiTargetAge,
         goals: goals ?? this.goals,
         assumptions: assumptions ?? this.assumptions,
+        aiConsent: aiConsent ?? this.aiConsent,
       );
 }
 
@@ -121,6 +127,11 @@ class AppStateNotifier extends Notifier<AppState> {
   }
 
   Future<void> resetAssumptions() => setAssumptions(Assumptions.standard);
+
+  Future<void> setAiConsent(bool value) {
+    state = state.copyWith(aiConsent: value);
+    return _repo.saveAiConsent(value);
+  }
 
   Future<void> deleteAllData() async {
     await _repo.deleteAll();

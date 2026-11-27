@@ -83,4 +83,9 @@ void main() {
       expect(MoneyMath.requiredSip(corpus, 0.11, 20), closeTo(27530, 300));
     });
   });
+
+  test('toTodaysMoney undoes inflate', () {
+    final future = MoneyMath.inflate(100000, 0.06, 10);
+    expect(MoneyMath.toTodaysMoney(future, 0.06, 10), closeTo(100000, 1e-6));
+  });
 }

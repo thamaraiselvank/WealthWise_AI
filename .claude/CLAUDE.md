@@ -2,8 +2,9 @@
 
 > Read this first in every session. It describes what we are building, why, and the decisions already made.
 > Status (2026-11-27): **Phase 1 complete (slices 1–4).** Finance engine + Flutter app: onboarding, health dashboard with expense breakdown + insights, net worth + loan-by-loan debt view, goals (FI + custom; add/edit/delete; "show the math"; target-age what-if), invest & learn, settings (edit profile, retake risk quiz, **editable planning assumptions**, export JSON, delete all, about). Optional detailed balance sheet (itemised assets and loans with rates). Encrypted local DB (schema v3). App name + launcher icon. Every screen tested at 200% text and in dark mode.
-> Not yet verified on a real device: `app/integration_test/encrypted_storage_test.dart` (the user's PC needs the Android Emulator hypervisor driver; or run on a USB phone).
-> Next: Phase 2 = Python backend on Cloud Run + AI assistant (Gemini) + daily market-data job.
+> **Phase 2 code done, not yet deployed (2026-11-27):** `backend/` (FastAPI: /v1/chat with Gemini + on-phone tool calls, /v1/market, /v1/config), `jobs/market_data/` (daily AMFI category stats), app "Ask AI" tab (consent, chat, tool runner, show-the-math). Runs fully offline with `WW_LLM_PROVIDER=fake`.
+> Waiting on the user: GCP project ID, Firebase project (Anonymous Auth + App Check/Play Integrity), then deploy per `backend/README.md` and `jobs/market_data/README.md`. Before launch: Firestore-backed quota store, Firebase auth headers in the app (`AuthHeaders` in `app/lib/data/api_client.dart`), fill `jobs/market_data/reference_rates.json` from official sources.
+> Not yet verified on a real device: `app/integration_test/encrypted_storage_test.dart` and the app talking to a live backend.
 
 ## 0. Working conventions
 
@@ -21,6 +22,9 @@
 - **Balance sheet:** quick mode = four totals on the profile row; detailed mode = rows in `assets` / `loans` tables, and totals are derived via `FinancialProfile.detailed`. Savings = bank + FDs (emergency fund); investments = funds/stocks/EPF/PPF/NPS/gold/other (count to goals); property counts only to net worth.
 - In widget tests use `pageScrollable()` from `test/helpers.dart`, not `find.byType(Scrollable).last` (text fields have their own horizontal Scrollable).
 - `AppStateNotifier` updates state first, then writes through to the repository. Tests use `newTestRepository()` (in-memory DB) and `pumpApp()` from `app/test/helpers.dart`.
+- Python: one venv at repo root (`.venv`). Tests: `cd backend && ../.venv/Scripts/python -m pytest -q` · `cd jobs/market_data && ../../.venv/Scripts/python -m pytest -q`. Local backend: `cd backend && ../.venv/Scripts/python -m uvicorn app.main:serve --factory --port 8080` (emulator reaches it at `http://10.0.2.2:8080`; release builds pass `--dart-define=WW_API_URL=...`).
+- **Assistant contract:** `shared/assistant_tools.json` lists the functions Gemini may call. The backend declares them; `app/lib/features/assistant/tool_runner.dart` runs them with the engine. Tests on both sides read the file; change both together. The tool runner only converts values; any new math goes in the engine.
+- **AI privacy:** only `buildProfileSummary` (numbers/enums) goes to the backend, which rejects unknown fields. Never add names, goal titles or labels. No request bodies in server logs.
 - Push to GitHub `main` after each completed slice.
 
 ## 1. What WealthWise AI is

@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../assistant/assistant_screen.dart';
 import '../goals/goals_screen.dart';
 import '../health/health_screen.dart';
 import '../invest/invest_screen.dart';
@@ -37,14 +38,7 @@ class _HomeShellState extends State<HomeShell> {
           HealthScreen(),
           GoalsScreen(),
           InvestScreen(),
-          ComingSoonScreen(
-            icon: Icons.chat_bubble_outline,
-            title: 'AI financial assistant',
-            description:
-                'Ask questions like "Can I retire at 50?" and get answers based on '
-                'your own numbers, with the calculations shown.',
-            phase: 'Phase 2',
-          ),
+          AssistantScreen(),
           ComingSoonScreen(
             icon: Icons.show_chart,
             title: 'Progress tracker',

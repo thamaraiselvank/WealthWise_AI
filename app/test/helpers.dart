@@ -1,9 +1,12 @@
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:wealthwise_ai/app.dart';
+import 'package:wealthwise_ai/data/api_client.dart';
+import 'package:wealthwise_ai/features/assistant/chat_models.dart';
 import 'package:wealthwise_ai/data/app_repository.dart';
 import 'package:wealthwise_ai/data/database.dart';
 import 'package:wealthwise_ai/state/app_state.dart';
@@ -23,6 +26,7 @@ Future<void> pumpApp(
   Size size = const Size(420, 900),
   double textScale = 1.0,
   ThemeMode themeMode = ThemeMode.light,
+  List<Override> overrides = const [],
 }) async {
   await tester.binding.setSurfaceSize(size);
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -31,6 +35,7 @@ Future<void> pumpApp(
     overrides: [
       repositoryProvider.overrideWithValue(repo),
       initialAppStateProvider.overrideWithValue(initial),
+      ...overrides,
     ],
     child: MediaQuery(
       data: MediaQueryData(
@@ -56,3 +61,24 @@ Finder pageScrollable() => find
     .byWidgetPredicate((w) =>
         w is Scrollable && axisDirectionToAxis(w.axisDirection) == Axis.vertical)
     .last;
+
+/// Scripted stand-in for the backend: returns [replies] in order and records
+/// every request.
+class FakeAssistantApi implements AssistantApi {
+  FakeAssistantApi(this.replies);
+
+  final List<Object> replies; // ChatReply or AssistantException
+  final requests = <({ChatMode mode, Map<String, Object?> profile, List<ChatMessage> messages})>[];
+
+  @override
+  Future<ChatReply> chat({
+    required ChatMode mode,
+    required Map<String, Object?> profile,
+    required List<ChatMessage> messages,
+  }) async {
+    requests.add((mode: mode, profile: profile, messages: List.of(messages)));
+    final next = replies.removeAt(0);
+    if (next is AssistantException) throw next;
+    return next as ChatReply;
+  }
+}

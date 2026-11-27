@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Only used for the AI assistant and market data (HTTPS to our backend). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="WealthWise AI"
         android:name="${applicationName}"

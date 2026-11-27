@@ -122,6 +122,19 @@ void main() {
     });
   });
 
+  test('extra payment shortens the loan and saves interest', () {
+    final e = PrepaymentEffect.of(3000000, 26035, 0.085, 5000);
+    expect(e.monthsBefore, 240);
+    expect(e.monthsSaved, greaterThan(40));
+    expect(e.interestSaved, greaterThan(500000));
+    expect(PrepaymentEffect.of(100000, 1000, 0.36, 0).monthsSaved, isNull);
+  });
+
+  test('totalContributed with and without step-up', () {
+    expect(MoneyMath.totalContributed(1000, 2), 24000);
+    expect(MoneyMath.totalContributed(1000, 2, annualStepUp: 0.1), 12000 + 13200);
+  });
+
   group('DebtAnalyzer', () {
     final r = DebtAnalyzer.analyze(_sheet.loans);
 

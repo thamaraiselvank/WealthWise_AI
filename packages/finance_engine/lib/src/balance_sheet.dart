@@ -204,6 +204,35 @@ class LoanMath {
   }
 }
 
+/// What paying [extra] on top of the EMI each month changes.
+class PrepaymentEffect {
+  final int? monthsBefore;
+  final int? monthsAfter;
+  final double? interestBefore;
+  final double? interestAfter;
+
+  const PrepaymentEffect({
+    required this.monthsBefore,
+    required this.monthsAfter,
+    required this.interestBefore,
+    required this.interestAfter,
+  });
+
+  int? get monthsSaved =>
+      monthsBefore == null || monthsAfter == null ? null : monthsBefore! - monthsAfter!;
+  double? get interestSaved => interestBefore == null || interestAfter == null
+      ? null
+      : interestBefore! - interestAfter!;
+
+  static PrepaymentEffect of(double outstanding, double emi, double annualRate, double extra) =>
+      PrepaymentEffect(
+        monthsBefore: LoanMath.monthsToPayoff(outstanding, emi, annualRate),
+        monthsAfter: LoanMath.monthsToPayoff(outstanding, emi + extra, annualRate),
+        interestBefore: LoanMath.interestRemaining(outstanding, emi, annualRate),
+        interestAfter: LoanMath.interestRemaining(outstanding, emi + extra, annualRate),
+      );
+}
+
 /// Rates at or above this are treated as costly debt to clear first.
 const highCostRate = 0.15;
 

@@ -18,6 +18,10 @@ class MoneyMath {
   static double inflate(double amount, double inflation, double years) =>
       futureValue(amount, inflation, years);
 
+  /// A future [amount] expressed in today's money (undoes [inflate]).
+  static double toTodaysMoney(double amount, double inflation, double years) =>
+      amount / math.pow(1 + inflation, years);
+
   /// Future value of a monthly SIP of [monthly] for [years] at [annualRate].
   ///
   /// [annualStepUp] increases the SIP every 12 months (0.10 = +10% a year).
@@ -44,6 +48,18 @@ class MoneyMath {
       balance = (balance + sip) * (1 + r);
     }
     return balance;
+  }
+
+  /// Total rupees put in by a monthly SIP over [years], with yearly step-up.
+  static double totalContributed(double monthly, double years, {double annualStepUp = 0}) {
+    final months = (years * 12).round();
+    var total = 0.0;
+    var sip = monthly;
+    for (var m = 0; m < months; m++) {
+      if (m > 0 && m % 12 == 0) sip *= (1 + annualStepUp);
+      total += sip;
+    }
+    return total;
   }
 
   /// Starting monthly SIP needed to reach [target] in [years].

@@ -16,6 +16,7 @@ class AppRepository {
   static const _kRiskAnswers = 'risk_answers';
   static const _kFiTargetAge = 'fi_target_age';
   static const _kAssumptions = 'assumptions';
+  static const _kAiConsent = 'ai_consent';
 
   Future<AppState> load() async {
     final row = await (_db.select(_db.profiles)
@@ -48,6 +49,7 @@ class AppRepository {
       fiTargetAge: fiAge,
       goals: goals.map(_toGoal).toList(),
       assumptions: _decodeAssumptions(settings[_kAssumptions]),
+      aiConsent: settings[_kAiConsent] != null,
     );
   }
 
@@ -126,6 +128,11 @@ class AppRepository {
           for (final f in a.changedFrom()) f.name: a.valueOf(f),
         }));
 
+  /// Stores when consent was given; withdrawing removes it.
+  Future<void> saveAiConsent(bool value) => value
+      ? _setSetting(_kAiConsent, DateTime.now().toUtc().toIso8601String())
+      : (_db.delete(_db.settings)..where((t) => t.key.equals(_kAiConsent))).go();
+
   Future<void> upsertGoal(Goal g) =>
       _db.into(_db.goals).insertOnConflictUpdate(GoalsCompanion(
             id: Value(g.id),
@@ -191,6 +198,7 @@ class AppRepository {
       'riskProfile': s.risk.name,
       'financialIndependenceAge': s.fiTargetAge,
       'assumptions': s.assumptions.toJson(),
+      'aiAssistantConsent': s.aiConsent,
       'goals': [
         for (final g in s.goals)
           {
