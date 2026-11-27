@@ -1,0 +1,38 @@
+# Builds the backend image and deploys it to Cloud Run.
+# Run from the repo root:
+#   gcloud builds submit --config backend/cloudbuild.yaml \
+#     --substitutions=_REGION=asia-south1,_MARKET_BUCKET=<bucket> .
+substitutions:
+  _REGION: asia-south1
+  _SERVICE: wealthwise-api
+  _REPO: wealthwise
+  _MARKET_BUCKET: ""            # set to the bucket the market job writes to
+  _CHAT_MODEL: gemini-2.5-flash
+  _RESEARCH_MODEL: gemini-2.5-pro
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-f", "backend/Dockerfile",
+           "-t", "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$BUILD_ID", "."]
+  - name: gcr.io/cloud-builders/docker
+    args: ["push", "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$BUILD_ID"]
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$BUILD_ID
+      - --region=${_REGION}
+      - --service-account=wealthwise-api@$PROJECT_ID.iam.gserviceaccount.com
+      - --allow-unauthenticated   # the app authenticates with Firebase tokens + App Check
+      - --min-instances=0
+      - --max-instances=5
+      - --concurrency=40
+      - --cpu=1
+      - --memory=512Mi
+      - --timeout=60
+      - --set-env-vars=WW_ENV=prod,WW_LLM_PROVIDER=vertex,WW_GCP_PROJECT=$PROJECT_ID,WW_GCP_LOCATION=${_REGION},WW_REQUIRE_AUTH=true,WW_REQUIRE_APP_CHECK=true,WW_FIREBASE_PROJECT=$PROJECT_ID,WW_MARKET_SOURCE=gs://${_MARKET_BUCKET}/market,WW_CHAT_MODEL=${_CHAT_MODEL},WW_RESEARCH_MODEL=${_RESEARCH_MODEL}
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$BUILD_ID

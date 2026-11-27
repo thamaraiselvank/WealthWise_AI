@@ -1,0 +1,79 @@
+{
+  "_comment": "Contract between the backend (declares these to Gemini) and the app (executes them with the Dart finance engine). Changing a name or parameter requires updating both sides; tests on both sides read this file.",
+  "version": 1,
+  "functions": [
+    {
+      "name": "get_health_report",
+      "description": "The user's financial health: score out of 100 with its parts, monthly surplus, savings rate, emergency fund target/gap/months covered, EMI-to-income ratio, net worth, and the top action items. Use for any question about how the user is doing overall.",
+      "parameters": {"type": "object", "properties": {}}
+    },
+    {
+      "name": "get_assumptions",
+      "description": "The planning assumptions currently used for every calculation (inflation, illustrative returns per asset class, SIP step-up, emergency fund months, independence corpus multiple), and which ones the user changed from the defaults.",
+      "parameters": {"type": "object", "properties": {}}
+    },
+    {
+      "name": "plan_goal",
+      "description": "Plan a goal priced in today's rupees: inflation-adjusted future cost, illustrative asset mix and return for the horizon and the user's risk profile, monthly SIP needed (flat and with yearly step-up), feasibility against the user's monthly surplus, and the step-by-step math.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "today_cost": {"type": "number", "description": "Cost in today's rupees."},
+          "years": {"type": "number", "description": "Years from now until the money is needed."},
+          "already_saved": {"type": "number", "description": "Rupees already set aside for this goal. Default 0."},
+          "goal_type": {"type": "string", "enum": ["house", "car", "education", "wealthCreation", "other"]}
+        },
+        "required": ["today_cost", "years"]
+      }
+    },
+    {
+      "name": "plan_independence",
+      "description": "Financial independence / retirement plan at a target age: corpus needed from inflated expenses times the corpus multiple, existing investments counted, monthly SIP needed (flat and step-up), feasibility and the math. Use for 'when can I retire' or 'what if I retire at X' questions.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "target_age": {"type": "integer", "description": "Age at which work becomes optional. Must be above the user's current age."}
+        },
+        "required": ["target_age"]
+      }
+    },
+    {
+      "name": "suggest_allocation",
+      "description": "Illustrative equity / debt / gold / cash split (percentages) for a time horizon and the user's risk profile, with the reasons. Categories only, never specific funds.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "horizon_years": {"type": "number", "description": "Years until the money is needed."}
+        },
+        "required": ["horizon_years"]
+      }
+    },
+    {
+      "name": "sip_projection",
+      "description": "Illustrative future value of a monthly SIP over a number of years, using the return of the illustrative mix for that horizon and the user's risk profile. Also shows the value in today's money after inflation.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "monthly_amount": {"type": "number", "description": "Rupees invested each month."},
+          "years": {"type": "number"},
+          "annual_step_up": {"type": "number", "description": "Yearly SIP increase as a fraction (0.1 = 10%). Omit to use the user's assumption."}
+        },
+        "required": ["monthly_amount", "years"]
+      }
+    },
+    {
+      "name": "loan_payoff",
+      "description": "Months to repay a loan and total interest left at a given EMI and annual rate; also the effect of paying an extra amount each month.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "outstanding": {"type": "number", "description": "Principal still owed, rupees."},
+          "emi": {"type": "number", "description": "Monthly payment, rupees."},
+          "annual_rate": {"type": "number", "description": "Annual interest rate as a fraction (0.09 = 9%)."},
+          "extra_monthly": {"type": "number", "description": "Optional extra payment each month, rupees."}
+        },
+        "required": ["outstanding", "emi", "annual_rate"]
+      }
+    }
+  ]
+}

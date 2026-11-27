@@ -1,0 +1,29 @@
+{
+  "_comment": "Served at /v1/config. Values are defaults the app may adopt between its built-in engine defaults and the user's own overrides (the user's choice always wins). Keep inside the engine's AssumptionSpec ranges; the app clamps anyway.",
+  "version": 1,
+  "updated": "2026-11-27",
+  "assumptions": {
+    "inflation": 0.06,
+    "equityReturn": 0.11,
+    "debtReturn": 0.065,
+    "goldReturn": 0.075,
+    "cashReturn": 0.035,
+    "sipStepUp": 0.10,
+    "emergencyFundMonths": 6,
+    "corpusMultiple": 25
+  },
+  "assumptions_note": "Long-run illustrative averages used as defaults. Not predictions.",
+  "disclaimer": "For education only, not investment advice. Returns and inflation are assumptions, not guarantees. Consider a SEBI-registered investment adviser for personalised advice.",
+  "ai": {
+    "free_questions_per_month": 5,
+    "suggested_questions": [
+      "How am I doing financially?",
+      "What should I focus on first?",
+      "Can I retire at 50?",
+      "What is an index fund?",
+      "Should I prepay my loan or invest?",
+      "How much emergency fund do I need?"
+    ]
+  },
+  "min_app_build": 1
+}
