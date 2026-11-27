@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../state/app_state.dart';
 import '../../util/format.dart';
+import '../../widgets/balance_sheet_editor.dart';
 import '../../widgets/expense_editor.dart';
 import '../../widgets/forms.dart';
 
@@ -22,6 +23,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   late int _dependents;
   late bool _health, _term;
   late ExpenseBreakdown? _breakdown = _original.expenseBreakdown;
+  late BalanceSheet? _sheet = _original.balanceSheet;
   bool _saving = false;
 
   TextEditingController _c(num v) => TextEditingController(text: v.round().toString());
@@ -62,19 +64,34 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     setState(() => _saving = true);
     final navigator = Navigator.of(context);
     try {
-      await ref.read(appStateProvider.notifier).updateProfile(FinancialProfile(
-            age: int.parse(_age.text),
-            monthlyIncome: parseAmount(_income.text),
-            monthlyExpenses: _breakdown?.total ?? parseAmount(_expenses.text),
-            monthlyEmi: parseAmount(_emi.text),
-            savings: parseAmount(_savings.text),
-            investments: parseAmount(_investments.text),
-            loanOutstanding: parseAmount(_loans.text),
-            dependents: _dependents,
-            hasHealthInsurance: _health,
-            hasTermInsurance: _term,
-            expenseBreakdown: _breakdown,
-          ));
+      final sheet = _sheet;
+      final age = int.parse(_age.text);
+      final income = parseAmount(_income.text);
+      final expenses = _breakdown?.total ?? parseAmount(_expenses.text);
+      await ref.read(appStateProvider.notifier).updateProfile(sheet != null
+          ? FinancialProfile.detailed(
+              age: age,
+              monthlyIncome: income,
+              monthlyExpenses: expenses,
+              sheet: sheet,
+              dependents: _dependents,
+              hasHealthInsurance: _health,
+              hasTermInsurance: _term,
+              expenseBreakdown: _breakdown,
+            )
+          : FinancialProfile(
+              age: age,
+              monthlyIncome: income,
+              monthlyExpenses: expenses,
+              monthlyEmi: parseAmount(_emi.text),
+              savings: parseAmount(_savings.text),
+              investments: parseAmount(_investments.text),
+              loanOutstanding: parseAmount(_loans.text),
+              dependents: _dependents,
+              hasHealthInsurance: _health,
+              hasTermInsurance: _term,
+              expenseBreakdown: _breakdown,
+            ));
       navigator.pop();
       messenger.showSnackBar(const SnackBar(content: Text('Profile updated')));
     } catch (_) {
@@ -117,13 +134,26 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
               onChanged: (b) => setState(() => _breakdown = b),
             ),
             gap,
-            NumberField(controller: _emi, label: 'Monthly loan EMIs'),
-            gap,
-            NumberField(controller: _savings, label: 'Savings (bank balance, FDs)'),
-            gap,
-            NumberField(controller: _investments, label: 'Investments'),
-            gap,
-            NumberField(controller: _loans, label: 'Total loans outstanding'),
+            BalanceSheetEditor(
+              initial: _sheet,
+              onChanged: (s) => setState(() => _sheet = s),
+              seed: () => BalanceSheet.fromTotals(
+                savings: parseAmount(_savings.text),
+                investments: parseAmount(_investments.text),
+                loanOutstanding: parseAmount(_loans.text),
+                monthlyEmi: parseAmount(_emi.text),
+              ),
+            ),
+            if (_sheet == null) ...[
+              gap,
+              NumberField(controller: _emi, label: 'Monthly loan EMIs'),
+              gap,
+              NumberField(controller: _savings, label: 'Savings (bank balance, FDs)'),
+              gap,
+              NumberField(controller: _investments, label: 'Investments'),
+              gap,
+              NumberField(controller: _loans, label: 'Total loans outstanding'),
+            ],
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('I have health insurance'),

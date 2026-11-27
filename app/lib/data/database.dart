@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:finance_engine/finance_engine.dart' show GoalType;
+import 'package:finance_engine/finance_engine.dart' show AssetType, GoalType, LoanType;
 
 part 'database.g.dart';
 
@@ -40,6 +40,36 @@ class Goals extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Itemised assets (detailed mode, added in schema v3). Empty = quick mode.
+@DataClassName('AssetRow')
+class Assets extends Table {
+  TextColumn get id => text()();
+  TextColumn get type => textEnum<AssetType>()();
+  TextColumn get label => text().withDefault(const Constant(''))();
+  RealColumn get value => real()();
+  IntColumn get position => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Itemised loans (detailed mode, added in schema v3).
+@DataClassName('LoanRow')
+class Loans extends Table {
+  TextColumn get id => text()();
+  TextColumn get type => textEnum<LoanType>()();
+  TextColumn get label => text().withDefault(const Constant(''))();
+  RealColumn get outstanding => real()();
+  RealColumn get emi => real().withDefault(const Constant(0))();
+
+  /// Annual rate (0.09 = 9%); null when unknown.
+  RealColumn get annualRate => real().nullable()();
+  IntColumn get position => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Small key-value store (risk answers, FI target age, ...). Values are JSON.
 @DataClassName('SettingRow')
 class Settings extends Table {
@@ -50,12 +80,12 @@ class Settings extends Table {
   Set<Column> get primaryKey => {key};
 }
 
-@DriftDatabase(tables: [Profiles, Goals, Settings])
+@DriftDatabase(tables: [Profiles, Goals, Settings, Assets, Loans])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -64,6 +94,12 @@ class AppDatabase extends _$AppDatabase {
           // v1 -> v2: optional expense breakdown on the profile.
           if (from < 2) {
             await m.addColumn(profiles, profiles.expenseBreakdown);
+          }
+          // v2 -> v3: itemised assets and loans. Existing users stay in quick
+          // mode (their totals live on the profile row).
+          if (from < 3) {
+            await m.createTable(assets);
+            await m.createTable(loans);
           }
         },
         beforeOpen: (details) async {

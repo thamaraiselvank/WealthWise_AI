@@ -1437,12 +1437,823 @@ class SettingsCompanion extends UpdateCompanion<SettingRow> {
   }
 }
 
+class $AssetsTable extends Assets with TableInfo<$AssetsTable, AssetRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AssetsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<AssetType, String> type =
+      GeneratedColumn<String>(
+        'type',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<AssetType>($AssetsTable.$convertertype);
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  @override
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+    'label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _valueMeta = const VerificationMeta('value');
+  @override
+  late final GeneratedColumn<double> value = GeneratedColumn<double>(
+    'value',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
+  @override
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, type, label, value, position];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'assets';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AssetRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+        _labelMeta,
+        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
+      );
+    }
+    if (data.containsKey('value')) {
+      context.handle(
+        _valueMeta,
+        value.isAcceptableOrUnknown(data['value']!, _valueMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_valueMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AssetRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AssetRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      type: $AssetsTable.$convertertype.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}type'],
+        )!,
+      ),
+      label: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label'],
+      )!,
+      value: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}value'],
+      )!,
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      )!,
+    );
+  }
+
+  @override
+  $AssetsTable createAlias(String alias) {
+    return $AssetsTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<AssetType, String, String> $convertertype =
+      const EnumNameConverter<AssetType>(AssetType.values);
+}
+
+class AssetRow extends DataClass implements Insertable<AssetRow> {
+  final String id;
+  final AssetType type;
+  final String label;
+  final double value;
+  final int position;
+  const AssetRow({
+    required this.id,
+    required this.type,
+    required this.label,
+    required this.value,
+    required this.position,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    {
+      map['type'] = Variable<String>($AssetsTable.$convertertype.toSql(type));
+    }
+    map['label'] = Variable<String>(label);
+    map['value'] = Variable<double>(value);
+    map['position'] = Variable<int>(position);
+    return map;
+  }
+
+  AssetsCompanion toCompanion(bool nullToAbsent) {
+    return AssetsCompanion(
+      id: Value(id),
+      type: Value(type),
+      label: Value(label),
+      value: Value(value),
+      position: Value(position),
+    );
+  }
+
+  factory AssetRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AssetRow(
+      id: serializer.fromJson<String>(json['id']),
+      type: $AssetsTable.$convertertype.fromJson(
+        serializer.fromJson<String>(json['type']),
+      ),
+      label: serializer.fromJson<String>(json['label']),
+      value: serializer.fromJson<double>(json['value']),
+      position: serializer.fromJson<int>(json['position']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'type': serializer.toJson<String>(
+        $AssetsTable.$convertertype.toJson(type),
+      ),
+      'label': serializer.toJson<String>(label),
+      'value': serializer.toJson<double>(value),
+      'position': serializer.toJson<int>(position),
+    };
+  }
+
+  AssetRow copyWith({
+    String? id,
+    AssetType? type,
+    String? label,
+    double? value,
+    int? position,
+  }) => AssetRow(
+    id: id ?? this.id,
+    type: type ?? this.type,
+    label: label ?? this.label,
+    value: value ?? this.value,
+    position: position ?? this.position,
+  );
+  AssetRow copyWithCompanion(AssetsCompanion data) {
+    return AssetRow(
+      id: data.id.present ? data.id.value : this.id,
+      type: data.type.present ? data.type.value : this.type,
+      label: data.label.present ? data.label.value : this.label,
+      value: data.value.present ? data.value.value : this.value,
+      position: data.position.present ? data.position.value : this.position,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AssetRow(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('label: $label, ')
+          ..write('value: $value, ')
+          ..write('position: $position')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, type, label, value, position);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AssetRow &&
+          other.id == this.id &&
+          other.type == this.type &&
+          other.label == this.label &&
+          other.value == this.value &&
+          other.position == this.position);
+}
+
+class AssetsCompanion extends UpdateCompanion<AssetRow> {
+  final Value<String> id;
+  final Value<AssetType> type;
+  final Value<String> label;
+  final Value<double> value;
+  final Value<int> position;
+  final Value<int> rowid;
+  const AssetsCompanion({
+    this.id = const Value.absent(),
+    this.type = const Value.absent(),
+    this.label = const Value.absent(),
+    this.value = const Value.absent(),
+    this.position = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AssetsCompanion.insert({
+    required String id,
+    required AssetType type,
+    this.label = const Value.absent(),
+    required double value,
+    this.position = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       type = Value(type),
+       value = Value(value);
+  static Insertable<AssetRow> custom({
+    Expression<String>? id,
+    Expression<String>? type,
+    Expression<String>? label,
+    Expression<double>? value,
+    Expression<int>? position,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (type != null) 'type': type,
+      if (label != null) 'label': label,
+      if (value != null) 'value': value,
+      if (position != null) 'position': position,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AssetsCompanion copyWith({
+    Value<String>? id,
+    Value<AssetType>? type,
+    Value<String>? label,
+    Value<double>? value,
+    Value<int>? position,
+    Value<int>? rowid,
+  }) {
+    return AssetsCompanion(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      label: label ?? this.label,
+      value: value ?? this.value,
+      position: position ?? this.position,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(
+        $AssetsTable.$convertertype.toSql(type.value),
+      );
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (value.present) {
+      map['value'] = Variable<double>(value.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AssetsCompanion(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('label: $label, ')
+          ..write('value: $value, ')
+          ..write('position: $position, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $LoansTable extends Loans with TableInfo<$LoansTable, LoanRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LoansTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<LoanType, String> type =
+      GeneratedColumn<String>(
+        'type',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<LoanType>($LoansTable.$convertertype);
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  @override
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+    'label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _outstandingMeta = const VerificationMeta(
+    'outstanding',
+  );
+  @override
+  late final GeneratedColumn<double> outstanding = GeneratedColumn<double>(
+    'outstanding',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _emiMeta = const VerificationMeta('emi');
+  @override
+  late final GeneratedColumn<double> emi = GeneratedColumn<double>(
+    'emi',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _annualRateMeta = const VerificationMeta(
+    'annualRate',
+  );
+  @override
+  late final GeneratedColumn<double> annualRate = GeneratedColumn<double>(
+    'annual_rate',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
+  @override
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    type,
+    label,
+    outstanding,
+    emi,
+    annualRate,
+    position,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'loans';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LoanRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+        _labelMeta,
+        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
+      );
+    }
+    if (data.containsKey('outstanding')) {
+      context.handle(
+        _outstandingMeta,
+        outstanding.isAcceptableOrUnknown(
+          data['outstanding']!,
+          _outstandingMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_outstandingMeta);
+    }
+    if (data.containsKey('emi')) {
+      context.handle(
+        _emiMeta,
+        emi.isAcceptableOrUnknown(data['emi']!, _emiMeta),
+      );
+    }
+    if (data.containsKey('annual_rate')) {
+      context.handle(
+        _annualRateMeta,
+        annualRate.isAcceptableOrUnknown(data['annual_rate']!, _annualRateMeta),
+      );
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LoanRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LoanRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      type: $LoansTable.$convertertype.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}type'],
+        )!,
+      ),
+      label: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label'],
+      )!,
+      outstanding: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}outstanding'],
+      )!,
+      emi: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}emi'],
+      )!,
+      annualRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}annual_rate'],
+      ),
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      )!,
+    );
+  }
+
+  @override
+  $LoansTable createAlias(String alias) {
+    return $LoansTable(attachedDatabase, alias);
+  }
+
+  static JsonTypeConverter2<LoanType, String, String> $convertertype =
+      const EnumNameConverter<LoanType>(LoanType.values);
+}
+
+class LoanRow extends DataClass implements Insertable<LoanRow> {
+  final String id;
+  final LoanType type;
+  final String label;
+  final double outstanding;
+  final double emi;
+
+  /// Annual rate (0.09 = 9%); null when unknown.
+  final double? annualRate;
+  final int position;
+  const LoanRow({
+    required this.id,
+    required this.type,
+    required this.label,
+    required this.outstanding,
+    required this.emi,
+    this.annualRate,
+    required this.position,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    {
+      map['type'] = Variable<String>($LoansTable.$convertertype.toSql(type));
+    }
+    map['label'] = Variable<String>(label);
+    map['outstanding'] = Variable<double>(outstanding);
+    map['emi'] = Variable<double>(emi);
+    if (!nullToAbsent || annualRate != null) {
+      map['annual_rate'] = Variable<double>(annualRate);
+    }
+    map['position'] = Variable<int>(position);
+    return map;
+  }
+
+  LoansCompanion toCompanion(bool nullToAbsent) {
+    return LoansCompanion(
+      id: Value(id),
+      type: Value(type),
+      label: Value(label),
+      outstanding: Value(outstanding),
+      emi: Value(emi),
+      annualRate: annualRate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(annualRate),
+      position: Value(position),
+    );
+  }
+
+  factory LoanRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LoanRow(
+      id: serializer.fromJson<String>(json['id']),
+      type: $LoansTable.$convertertype.fromJson(
+        serializer.fromJson<String>(json['type']),
+      ),
+      label: serializer.fromJson<String>(json['label']),
+      outstanding: serializer.fromJson<double>(json['outstanding']),
+      emi: serializer.fromJson<double>(json['emi']),
+      annualRate: serializer.fromJson<double?>(json['annualRate']),
+      position: serializer.fromJson<int>(json['position']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'type': serializer.toJson<String>(
+        $LoansTable.$convertertype.toJson(type),
+      ),
+      'label': serializer.toJson<String>(label),
+      'outstanding': serializer.toJson<double>(outstanding),
+      'emi': serializer.toJson<double>(emi),
+      'annualRate': serializer.toJson<double?>(annualRate),
+      'position': serializer.toJson<int>(position),
+    };
+  }
+
+  LoanRow copyWith({
+    String? id,
+    LoanType? type,
+    String? label,
+    double? outstanding,
+    double? emi,
+    Value<double?> annualRate = const Value.absent(),
+    int? position,
+  }) => LoanRow(
+    id: id ?? this.id,
+    type: type ?? this.type,
+    label: label ?? this.label,
+    outstanding: outstanding ?? this.outstanding,
+    emi: emi ?? this.emi,
+    annualRate: annualRate.present ? annualRate.value : this.annualRate,
+    position: position ?? this.position,
+  );
+  LoanRow copyWithCompanion(LoansCompanion data) {
+    return LoanRow(
+      id: data.id.present ? data.id.value : this.id,
+      type: data.type.present ? data.type.value : this.type,
+      label: data.label.present ? data.label.value : this.label,
+      outstanding: data.outstanding.present
+          ? data.outstanding.value
+          : this.outstanding,
+      emi: data.emi.present ? data.emi.value : this.emi,
+      annualRate: data.annualRate.present
+          ? data.annualRate.value
+          : this.annualRate,
+      position: data.position.present ? data.position.value : this.position,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LoanRow(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('label: $label, ')
+          ..write('outstanding: $outstanding, ')
+          ..write('emi: $emi, ')
+          ..write('annualRate: $annualRate, ')
+          ..write('position: $position')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, type, label, outstanding, emi, annualRate, position);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LoanRow &&
+          other.id == this.id &&
+          other.type == this.type &&
+          other.label == this.label &&
+          other.outstanding == this.outstanding &&
+          other.emi == this.emi &&
+          other.annualRate == this.annualRate &&
+          other.position == this.position);
+}
+
+class LoansCompanion extends UpdateCompanion<LoanRow> {
+  final Value<String> id;
+  final Value<LoanType> type;
+  final Value<String> label;
+  final Value<double> outstanding;
+  final Value<double> emi;
+  final Value<double?> annualRate;
+  final Value<int> position;
+  final Value<int> rowid;
+  const LoansCompanion({
+    this.id = const Value.absent(),
+    this.type = const Value.absent(),
+    this.label = const Value.absent(),
+    this.outstanding = const Value.absent(),
+    this.emi = const Value.absent(),
+    this.annualRate = const Value.absent(),
+    this.position = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LoansCompanion.insert({
+    required String id,
+    required LoanType type,
+    this.label = const Value.absent(),
+    required double outstanding,
+    this.emi = const Value.absent(),
+    this.annualRate = const Value.absent(),
+    this.position = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       type = Value(type),
+       outstanding = Value(outstanding);
+  static Insertable<LoanRow> custom({
+    Expression<String>? id,
+    Expression<String>? type,
+    Expression<String>? label,
+    Expression<double>? outstanding,
+    Expression<double>? emi,
+    Expression<double>? annualRate,
+    Expression<int>? position,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (type != null) 'type': type,
+      if (label != null) 'label': label,
+      if (outstanding != null) 'outstanding': outstanding,
+      if (emi != null) 'emi': emi,
+      if (annualRate != null) 'annual_rate': annualRate,
+      if (position != null) 'position': position,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LoansCompanion copyWith({
+    Value<String>? id,
+    Value<LoanType>? type,
+    Value<String>? label,
+    Value<double>? outstanding,
+    Value<double>? emi,
+    Value<double?>? annualRate,
+    Value<int>? position,
+    Value<int>? rowid,
+  }) {
+    return LoansCompanion(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      label: label ?? this.label,
+      outstanding: outstanding ?? this.outstanding,
+      emi: emi ?? this.emi,
+      annualRate: annualRate ?? this.annualRate,
+      position: position ?? this.position,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(
+        $LoansTable.$convertertype.toSql(type.value),
+      );
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (outstanding.present) {
+      map['outstanding'] = Variable<double>(outstanding.value);
+    }
+    if (emi.present) {
+      map['emi'] = Variable<double>(emi.value);
+    }
+    if (annualRate.present) {
+      map['annual_rate'] = Variable<double>(annualRate.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LoansCompanion(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('label: $label, ')
+          ..write('outstanding: $outstanding, ')
+          ..write('emi: $emi, ')
+          ..write('annualRate: $annualRate, ')
+          ..write('position: $position, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $ProfilesTable profiles = $ProfilesTable(this);
   late final $GoalsTable goals = $GoalsTable(this);
   late final $SettingsTable settings = $SettingsTable(this);
+  late final $AssetsTable assets = $AssetsTable(this);
+  late final $LoansTable loans = $LoansTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1451,6 +2262,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     profiles,
     goals,
     settings,
+    assets,
+    loans,
   ];
 }
 
@@ -2200,6 +3013,451 @@ typedef $$SettingsTableProcessedTableManager =
       SettingRow,
       PrefetchHooks Function()
     >;
+typedef $$AssetsTableCreateCompanionBuilder = AssetsCompanion Function({
+  required String id,
+  required AssetType type,
+  Value<String> label,
+  required double value,
+  Value<int> position,
+  Value<int> rowid,
+});
+typedef $$AssetsTableUpdateCompanionBuilder = AssetsCompanion Function({
+  Value<String> id,
+  Value<AssetType> type,
+  Value<String> label,
+  Value<double> value,
+  Value<int> position,
+  Value<int> rowid,
+});
+
+class $$AssetsTableFilterComposer
+    extends Composer<_$AppDatabase, $AssetsTable> {
+  $$AssetsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<AssetType, AssetType, String> get type =>
+      $composableBuilder(
+        column: $table.type,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AssetsTableOrderingComposer
+    extends Composer<_$AppDatabase, $AssetsTable> {
+  $$AssetsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AssetsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AssetsTable> {
+  $$AssetsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<AssetType, String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<double> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => column);
+
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+}
+
+class $$AssetsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AssetsTable,
+          AssetRow,
+          $$AssetsTableFilterComposer,
+          $$AssetsTableOrderingComposer,
+          $$AssetsTableAnnotationComposer,
+          $$AssetsTableCreateCompanionBuilder,
+          $$AssetsTableUpdateCompanionBuilder,
+          (AssetRow, BaseReferences<_$AppDatabase, $AssetsTable, AssetRow>),
+          AssetRow,
+          PrefetchHooks Function()
+        > {
+  $$AssetsTableTableManager(_$AppDatabase db, $AssetsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AssetsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AssetsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AssetsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<AssetType> type = const Value.absent(),
+                Value<String> label = const Value.absent(),
+                Value<double> value = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AssetsCompanion(
+                id: id,
+                type: type,
+                label: label,
+                value: value,
+                position: position,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required AssetType type,
+                Value<String> label = const Value.absent(),
+                required double value,
+                Value<int> position = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AssetsCompanion.insert(
+                id: id,
+                type: type,
+                label: label,
+                value: value,
+                position: position,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$AssetsTable, AssetRow>(table),
+                  BaseReferences<_$AppDatabase, $AssetsTable, AssetRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AssetsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AssetsTable,
+      AssetRow,
+      $$AssetsTableFilterComposer,
+      $$AssetsTableOrderingComposer,
+      $$AssetsTableAnnotationComposer,
+      $$AssetsTableCreateCompanionBuilder,
+      $$AssetsTableUpdateCompanionBuilder,
+      (AssetRow, BaseReferences<_$AppDatabase, $AssetsTable, AssetRow>),
+      AssetRow,
+      PrefetchHooks Function()
+    >;
+typedef $$LoansTableCreateCompanionBuilder = LoansCompanion Function({
+  required String id,
+  required LoanType type,
+  Value<String> label,
+  required double outstanding,
+  Value<double> emi,
+  Value<double?> annualRate,
+  Value<int> position,
+  Value<int> rowid,
+});
+typedef $$LoansTableUpdateCompanionBuilder = LoansCompanion Function({
+  Value<String> id,
+  Value<LoanType> type,
+  Value<String> label,
+  Value<double> outstanding,
+  Value<double> emi,
+  Value<double?> annualRate,
+  Value<int> position,
+  Value<int> rowid,
+});
+
+class $$LoansTableFilterComposer extends Composer<_$AppDatabase, $LoansTable> {
+  $$LoansTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<LoanType, LoanType, String> get type =>
+      $composableBuilder(
+        column: $table.type,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get outstanding => $composableBuilder(
+    column: $table.outstanding,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get emi => $composableBuilder(
+    column: $table.emi,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get annualRate => $composableBuilder(
+    column: $table.annualRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LoansTableOrderingComposer
+    extends Composer<_$AppDatabase, $LoansTable> {
+  $$LoansTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get outstanding => $composableBuilder(
+    column: $table.outstanding,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get emi => $composableBuilder(
+    column: $table.emi,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get annualRate => $composableBuilder(
+    column: $table.annualRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LoansTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LoansTable> {
+  $$LoansTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<LoanType, String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<double> get outstanding => $composableBuilder(
+    column: $table.outstanding,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get emi =>
+      $composableBuilder(column: $table.emi, builder: (column) => column);
+
+  GeneratedColumn<double> get annualRate => $composableBuilder(
+    column: $table.annualRate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+}
+
+class $$LoansTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LoansTable,
+          LoanRow,
+          $$LoansTableFilterComposer,
+          $$LoansTableOrderingComposer,
+          $$LoansTableAnnotationComposer,
+          $$LoansTableCreateCompanionBuilder,
+          $$LoansTableUpdateCompanionBuilder,
+          (LoanRow, BaseReferences<_$AppDatabase, $LoansTable, LoanRow>),
+          LoanRow,
+          PrefetchHooks Function()
+        > {
+  $$LoansTableTableManager(_$AppDatabase db, $LoansTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LoansTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LoansTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LoansTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<LoanType> type = const Value.absent(),
+                Value<String> label = const Value.absent(),
+                Value<double> outstanding = const Value.absent(),
+                Value<double> emi = const Value.absent(),
+                Value<double?> annualRate = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LoansCompanion(
+                id: id,
+                type: type,
+                label: label,
+                outstanding: outstanding,
+                emi: emi,
+                annualRate: annualRate,
+                position: position,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required LoanType type,
+                Value<String> label = const Value.absent(),
+                required double outstanding,
+                Value<double> emi = const Value.absent(),
+                Value<double?> annualRate = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LoansCompanion.insert(
+                id: id,
+                type: type,
+                label: label,
+                outstanding: outstanding,
+                emi: emi,
+                annualRate: annualRate,
+                position: position,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$LoansTable, LoanRow>(table),
+                  BaseReferences<_$AppDatabase, $LoansTable, LoanRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LoansTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LoansTable,
+      LoanRow,
+      $$LoansTableFilterComposer,
+      $$LoansTableOrderingComposer,
+      $$LoansTableAnnotationComposer,
+      $$LoansTableCreateCompanionBuilder,
+      $$LoansTableUpdateCompanionBuilder,
+      (LoanRow, BaseReferences<_$AppDatabase, $LoansTable, LoanRow>),
+      LoanRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2210,4 +3468,8 @@ class $AppDatabaseManager {
       $$GoalsTableTableManager(_db, _db.goals);
   $$SettingsTableTableManager get settings =>
       $$SettingsTableTableManager(_db, _db.settings);
+  $$AssetsTableTableManager get assets =>
+      $$AssetsTableTableManager(_db, _db.assets);
+  $$LoansTableTableManager get loans =>
+      $$LoansTableTableManager(_db, _db.loans);
 }

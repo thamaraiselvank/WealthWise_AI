@@ -1,7 +1,7 @@
 # WealthWise AI — Project Context
 
 > Read this first in every session. It describes what we are building, why, and the decisions already made.
-> Status (2026-11-26): **Phase 1 complete (slices 1–3).** Finance engine + Flutter app: onboarding, health dashboard with expense breakdown + insights, goals (FI + custom; add/edit/delete; "show the math"; target-age what-if), invest & learn, settings (edit profile, retake risk quiz, export JSON, delete all, about). Encrypted local DB (schema v2). App name + launcher icon. Every screen tested at 200% text and in dark mode.
+> Status (2026-11-27): **Phase 1 complete (slices 1–4).** Finance engine + Flutter app: onboarding, health dashboard with expense breakdown + insights, net worth + loan-by-loan debt view, goals (FI + custom; add/edit/delete; "show the math"; target-age what-if), invest & learn, settings (edit profile, retake risk quiz, **editable planning assumptions**, export JSON, delete all, about). Optional detailed balance sheet (itemised assets and loans with rates). Encrypted local DB (schema v3). App name + launcher icon. Every screen tested at 200% text and in dark mode.
 > Not yet verified on a real device: `app/integration_test/encrypted_storage_test.dart` (the user's PC needs the Android Emulator hypervisor driver; or run on a USB phone).
 > Next: Phase 2 = Python backend on Cloud Run + AI assistant (Gemini) + daily market-data job.
 
@@ -17,6 +17,9 @@
 - **Icon:** `dart run tool/generate_icon.dart` then `dart run flutter_launcher_icons` (inside `app/`).
 - **Windows build note:** `kotlin.incremental=false` in `android/gradle.properties` is required (project on F:, pub cache on C:).
 - **Encryption:** `sqlite3` is built as SQLite3MultipleCiphers via `hooks: user_defines: sqlite3: source: sqlite3mc` in `app/pubspec.yaml`. Key = 256-bit random hex in `flutter_secure_storage`; `applyEncryptionKey` fails fast if encryption is missing. Android backup is disabled (`allowBackup=false` + `data_extraction_rules.xml`); do not re-enable it.
+- **Assumptions** (`Assumptions` + `AssumptionSpec` in the engine) are user-editable within safe ranges; only overrides are stored (settings key `assumptions`). Providers must pass `a: state.assumptions` to every engine call. Phase 2 server config will sit between engine defaults and user overrides.
+- **Balance sheet:** quick mode = four totals on the profile row; detailed mode = rows in `assets` / `loans` tables, and totals are derived via `FinancialProfile.detailed`. Savings = bank + FDs (emergency fund); investments = funds/stocks/EPF/PPF/NPS/gold/other (count to goals); property counts only to net worth.
+- In widget tests use `pageScrollable()` from `test/helpers.dart`, not `find.byType(Scrollable).last` (text fields have their own horizontal Scrollable).
 - `AppStateNotifier` updates state first, then writes through to the repository. Tests use `newTestRepository()` (in-memory DB) and `pumpApp()` from `app/test/helpers.dart`.
 - Push to GitHub `main` after each completed slice.
 

@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../state/app_state.dart';
 import '../../util/format.dart';
+import '../../widgets/balance_sheet_editor.dart';
 import '../../widgets/expense_editor.dart';
 import '../../widgets/forms.dart';
 
@@ -21,7 +22,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   static const _stepTitles = [
     'About you',
     'Monthly money',
-    'What you have',
+    'What you own and owe',
     'Your comfort with risk',
     'Your big goal',
   ];
@@ -42,6 +43,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final Map<String, int> _risk = {};
   int? _targetAge;
   ExpenseBreakdown? _breakdown;
+  BalanceSheet? _sheet;
 
   int get _ageValue => int.tryParse(_age.text) ?? 0;
 
@@ -93,19 +95,31 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Future<void> _finish() async {
     if (_saving) return;
     setState(() => _saving = true);
-    final profile = FinancialProfile(
-      age: _ageValue,
-      monthlyIncome: parseAmount(_income.text),
-      monthlyExpenses: _expensesValue,
-      monthlyEmi: parseAmount(_emi.text),
-      savings: parseAmount(_savings.text),
-      investments: parseAmount(_investments.text),
-      loanOutstanding: parseAmount(_loans.text),
-      dependents: _dependents,
-      hasHealthInsurance: _health,
-      hasTermInsurance: _term,
-      expenseBreakdown: _breakdown,
-    );
+    final sheet = _sheet;
+    final profile = sheet != null
+        ? FinancialProfile.detailed(
+            age: _ageValue,
+            monthlyIncome: parseAmount(_income.text),
+            monthlyExpenses: _expensesValue,
+            sheet: sheet,
+            dependents: _dependents,
+            hasHealthInsurance: _health,
+            hasTermInsurance: _term,
+            expenseBreakdown: _breakdown,
+          )
+        : FinancialProfile(
+            age: _ageValue,
+            monthlyIncome: parseAmount(_income.text),
+            monthlyExpenses: _expensesValue,
+            monthlyEmi: parseAmount(_emi.text),
+            savings: parseAmount(_savings.text),
+            investments: parseAmount(_investments.text),
+            loanOutstanding: parseAmount(_loans.text),
+            dependents: _dependents,
+            hasHealthInsurance: _health,
+            hasTermInsurance: _term,
+            expenseBreakdown: _breakdown,
+          );
     try {
       await ref.read(appStateProvider.notifier).completeOnboarding(
             profile: profile,
@@ -131,6 +145,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     _loans.text = '0';
     _health = false;
     _term = false;
+    _sheet = null;
     for (final q in RiskQuestionnaire.questions) {
       _risk[q.id] = 1;
     }
@@ -237,23 +252,36 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           initial: _breakdown,
           onChanged: (b) => setState(() => _breakdown = b),
         ),
-        const SizedBox(height: 16),
-        NumberField(controller: _emi, label: 'Monthly loan EMIs (if any)'),
       ];
 
   List<Widget> _assets() => [
-        NumberField(
-          controller: _savings,
-          label: 'Savings (bank balance, FDs)',
-          helper: 'Money you can access quickly in an emergency.',
+        BalanceSheetEditor(
+          initial: _sheet,
+          onChanged: (s) => setState(() => _sheet = s),
+          seed: () => BalanceSheet.fromTotals(
+            savings: parseAmount(_savings.text),
+            investments: parseAmount(_investments.text),
+            loanOutstanding: parseAmount(_loans.text),
+            monthlyEmi: parseAmount(_emi.text),
+          ),
         ),
-        const SizedBox(height: 16),
-        NumberField(
-          controller: _investments,
-          label: 'Investments (mutual funds, stocks, PPF, etc.)',
-        ),
-        const SizedBox(height: 16),
-        NumberField(controller: _loans, label: 'Total loans outstanding'),
+        if (_sheet == null) ...[
+          const SizedBox(height: 8),
+          NumberField(
+            controller: _savings,
+            label: 'Savings (bank balance, FDs)',
+            helper: 'Money you can access quickly in an emergency.',
+          ),
+          const SizedBox(height: 16),
+          NumberField(
+            controller: _investments,
+            label: 'Investments (mutual funds, stocks, PPF, etc.)',
+          ),
+          const SizedBox(height: 16),
+          NumberField(controller: _loans, label: 'Total loans outstanding'),
+          const SizedBox(height: 16),
+          NumberField(controller: _emi, label: 'Monthly loan EMIs (if any)'),
+        ],
         const SizedBox(height: 8),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,

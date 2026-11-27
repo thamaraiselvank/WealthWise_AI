@@ -49,3 +49,10 @@ Future<void> onboardWithSample(WidgetTester tester) async {
   await tester.tap(find.text('Just exploring? Try with sample data'));
   await tester.pumpAndSettle();
 }
+
+/// The page's main vertical scroll view. (Text fields contain their own
+/// horizontal Scrollable, so `find.byType(Scrollable).last` can pick one.)
+Finder pageScrollable() => find
+    .byWidgetPredicate((w) =>
+        w is Scrollable && axisDirectionToAxis(w.axisDirection) == Axis.vertical)
+    .last;

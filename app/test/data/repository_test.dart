@@ -117,6 +117,43 @@ void main() {
       expect((await repo.load()).assumptions, Assumptions.standard);
     });
 
+    test('balance sheet round-trips in order and can be switched off', () async {
+      final detailed = FinancialProfile.detailed(
+        age: 33,
+        monthlyIncome: 100000,
+        monthlyExpenses: 45000,
+        sheet: const BalanceSheet(
+          assets: [
+            Asset(id: 'a2', type: AssetType.retirement, value: 500000, label: 'EPF'),
+            Asset(id: 'a1', type: AssetType.bank, value: 120000),
+            Asset(id: 'a3', type: AssetType.property, value: 3500000),
+          ],
+          loans: [
+            Loan(id: 'l1', type: LoanType.home, outstanding: 2500000, emi: 24000, annualRate: 0.0875),
+            Loan(id: 'l2', type: LoanType.creditCard, outstanding: 30000, emi: 3000),
+          ],
+        ),
+      );
+      await repo.saveOnboarding(profile: detailed, riskAnswers: {}, fiTargetAge: 50);
+
+      final p = (await repo.load()).profile!;
+      expect(p.balanceSheet, detailed.balanceSheet);
+      expect(p.savings, 120000);
+      expect(p.investments, 500000);
+      expect(p.monthlyEmi, 27000);
+      expect(p.netWorth, 120000 + 500000 + 3500000 - 2530000);
+
+      final export = (await repo.exportData())['profile'] as Map;
+      expect((export['assets'] as List).first, {'type': 'retirement', 'label': 'EPF', 'value': 500000.0});
+      expect((export['loans'] as List).last['annualRate'], isNull);
+
+      // Back to quick mode: itemised rows are removed.
+      await repo.saveProfile(_profile);
+      expect((await repo.load()).profile!.balanceSheet, isNull);
+      expect(await db.select(db.assets).get(), isEmpty);
+      expect(await db.select(db.loans).get(), isEmpty);
+    });
+
     test('deleteAll wipes everything', () async {
       await repo.saveOnboarding(profile: _profile, riskAnswers: {}, fiTargetAge: 50);
       await repo.upsertGoal(_goal);

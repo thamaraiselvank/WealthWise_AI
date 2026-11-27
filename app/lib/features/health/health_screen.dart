@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../state/app_state.dart';
 import '../../util/format.dart';
 import '../../widgets/common.dart';
+import 'balance_cards.dart';
 import 'spending_card.dart';
 
 class HealthScreen extends ConsumerWidget {
@@ -60,6 +61,8 @@ class HealthScreen extends ConsumerWidget {
           ),
         ),
         const SpendingCard(),
+        NetWorthCard(report: report),
+        if (report.debt case final debt?) DebtCard(debt: debt),
         SectionCard(
           title: 'Emergency fund',
           child: _EmergencyFund(report: report),

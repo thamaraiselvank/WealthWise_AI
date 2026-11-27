@@ -27,7 +27,13 @@ class AppRepository {
       for (final s in await _db.select(_db.settings).get()) s.key: s.value,
     };
     final answers = _decodeAnswers(settings[_kRiskAnswers]);
-    final profile = _toProfile(row);
+    final assetRows = await (_db.select(_db.assets)
+          ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+        .get();
+    final loanRows = await (_db.select(_db.loans)
+          ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+        .get();
+    final profile = _toProfile(row, assetRows, loanRows);
     final fiAge = int.tryParse(settings[_kFiTargetAge] ?? '') ??
         (profile.age + 20).clamp(profile.age + 1, 75);
 
@@ -56,7 +62,41 @@ class AppRepository {
         await saveFiTargetAge(fiTargetAge);
       });
 
-  Future<void> saveProfile(FinancialProfile p) =>
+  /// Saves the profile row and replaces the itemised assets / loans
+  /// (none in quick mode).
+  Future<void> saveProfile(FinancialProfile p) => _db.transaction(() async {
+        await _saveProfileRow(p);
+        await _db.delete(_db.assets).go();
+        await _db.delete(_db.loans).go();
+        final sheet = p.balanceSheet;
+        if (sheet == null) return;
+        await _db.batch((b) {
+          b.insertAll(_db.assets, [
+            for (final (i, a) in sheet.assets.indexed)
+              AssetsCompanion.insert(
+                id: a.id,
+                type: a.type,
+                label: Value(a.label),
+                value: a.value,
+                position: Value(i),
+              ),
+          ]);
+          b.insertAll(_db.loans, [
+            for (final (i, l) in sheet.loans.indexed)
+              LoansCompanion.insert(
+                id: l.id,
+                type: l.type,
+                label: Value(l.label),
+                outstanding: l.outstanding,
+                emi: Value(l.emi),
+                annualRate: Value(l.annualRate),
+                position: Value(i),
+              ),
+          ]);
+        });
+      });
+
+  Future<void> _saveProfileRow(FinancialProfile p) =>
       _db.into(_db.profiles).insertOnConflictUpdate(ProfilesCompanion(
             id: const Value(_profileId),
             age: Value(p.age),
@@ -116,7 +156,7 @@ class AppRepository {
     final p = s.profile;
     return {
       'app': 'WealthWise AI',
-      'exportVersion': 1,
+      'exportVersion': 2,
       'exportedAt': DateTime.now().toUtc().toIso8601String(),
       'profile': p == null
           ? null
@@ -132,6 +172,20 @@ class AppRepository {
               'hasHealthInsurance': p.hasHealthInsurance,
               'hasTermInsurance': p.hasTermInsurance,
               'expenseBreakdown': p.expenseBreakdown?.toJson(),
+              'assets': [
+                for (final a in p.balanceSheet?.assets ?? const <Asset>[])
+                  {'type': a.type.name, 'label': a.label, 'value': a.value},
+              ],
+              'loans': [
+                for (final l in p.balanceSheet?.loans ?? const <Loan>[])
+                  {
+                    'type': l.type.name,
+                    'label': l.label,
+                    'outstanding': l.outstanding,
+                    'emi': l.emi,
+                    'annualRate': l.annualRate,
+                  },
+              ],
             },
       'riskAnswers': s.riskAnswers,
       'riskProfile': s.risk.name,
@@ -176,7 +230,38 @@ class AppRepository {
     }
   }
 
-  static FinancialProfile _toProfile(ProfileRow r) => FinancialProfile(
+  static FinancialProfile _toProfile(
+      ProfileRow r, List<AssetRow> assetRows, List<LoanRow> loanRows) {
+    if (assetRows.isEmpty && loanRows.isEmpty) return _toQuickProfile(r);
+    return FinancialProfile.detailed(
+      age: r.age,
+      monthlyIncome: r.monthlyIncome,
+      monthlyExpenses: r.monthlyExpenses,
+      dependents: r.dependents,
+      hasHealthInsurance: r.hasHealthInsurance,
+      hasTermInsurance: r.hasTermInsurance,
+      expenseBreakdown: _decodeBreakdown(r.expenseBreakdown),
+      sheet: BalanceSheet(
+        assets: [
+          for (final a in assetRows)
+            Asset(id: a.id, type: a.type, label: a.label, value: a.value),
+        ],
+        loans: [
+          for (final l in loanRows)
+            Loan(
+              id: l.id,
+              type: l.type,
+              label: l.label,
+              outstanding: l.outstanding,
+              emi: l.emi,
+              annualRate: l.annualRate,
+            ),
+        ],
+      ),
+    );
+  }
+
+  static FinancialProfile _toQuickProfile(ProfileRow r) => FinancialProfile(
         age: r.age,
         monthlyIncome: r.monthlyIncome,
         monthlyExpenses: r.monthlyExpenses,

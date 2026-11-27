@@ -67,6 +67,48 @@ void main() {
     expect((await repo.load()).assumptions.isStandard, isTrue);
   });
 
+  testWidgets('switching to itemised assets and loans shows net worth and debt order',
+      (tester) async {
+    final repo = newTestRepository();
+    await pumpApp(tester, repo, size: const Size(420, 2400));
+    await onboardWithSample(tester);
+    expect(find.text('Net worth'), findsOneWidget);
+    expect(find.text('Your loans'), findsNothing);
+
+    await tester.tap(find.byTooltip('Settings'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Edit financial details'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('List my assets and loans one by one'));
+    await tester.pumpAndSettle();
+
+    // Quick totals were carried over: ₹80k bank + ₹20k investments.
+    expect(find.text('Total owned: ₹1,00,000'), findsOneWidget);
+
+    await tester.tap(find.text('Add loan'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextFormField, 'Amount still owed'), '60000');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Monthly EMI'), '3000');
+    await tester.enterText(
+        find.widgetWithText(TextFormField, 'Interest rate (optional)'), '18');
+    await tester.pumpAndSettle();
+    expect(find.text('Total owed: ₹60,000 · EMIs: ₹3,000/month'), findsOneWidget);
+
+    await tester.tap(find.text('Save changes'));
+    await tester.pumpAndSettle();
+
+    final p = (await repo.load()).profile!;
+    expect(p.balanceSheet!.loans.single.annualRate, 0.18);
+    expect(p.savings, 80000);
+    expect(p.monthlyEmi, 3000);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text('Your loans'), findsOneWidget);
+    expect(find.text('Clear costly debt first'), findsOneWidget);
+    expect(find.textContaining('Debt-free in about'), findsOneWidget);
+  });
+
   testWidgets('add, edit and delete a goal', (tester) async {
     final repo = newTestRepository();
     await pumpApp(tester, repo);
@@ -116,9 +158,13 @@ void main() {
     await tester.pumpAndSettle();
 
     // Turn on health insurance: +10 points.
+    await tester.scrollUntilVisible(find.text('I have health insurance'), 200,
+        scrollable: pageScrollable());
+    await tester.ensureVisible(find.text('I have health insurance'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('I have health insurance'));
     await tester.scrollUntilVisible(find.text('Save changes'), 200,
-        scrollable: find.byType(Scrollable).last);
+        scrollable: pageScrollable());
     await tester.tap(find.text('Save changes'));
     await tester.pumpAndSettle();
 
@@ -148,12 +194,12 @@ void main() {
       '-25% to +35%',
     ]) {
       await tester.scrollUntilVisible(find.text(option), 100,
-          scrollable: find.byType(Scrollable).last);
+          scrollable: pageScrollable());
       await tester.tap(find.text(option));
       await tester.pump();
     }
     await tester.scrollUntilVisible(find.widgetWithText(FilledButton, 'Save'), 100,
-        scrollable: find.byType(Scrollable).last);
+        scrollable: pageScrollable());
     await tester.tap(find.widgetWithText(FilledButton, 'Save'));
     await tester.pumpAndSettle();
     expect(find.text('Currently Aggressive'), findsOneWidget);
@@ -187,7 +233,7 @@ void main() {
     await tester.tap(find.text('Edit financial details'));
     await tester.pumpAndSettle();
 
-    final top = find.byType(Scrollable).last;
+    final top = pageScrollable();
     await tester.scrollUntilVisible(find.text('Split my expenses by category'), 200, scrollable: top);
     await tester.tap(find.text('Split my expenses by category'));
     await tester.pumpAndSettle();
@@ -210,7 +256,7 @@ void main() {
     expect(saved.expenseBreakdown!.total, 25000);
 
     await tester.scrollUntilVisible(find.text('Where your money goes'), 300,
-        scrollable: find.byType(Scrollable).last);
+        scrollable: pageScrollable());
     expect(find.text('Housing is 38% of income'), findsOneWidget);
   });
 

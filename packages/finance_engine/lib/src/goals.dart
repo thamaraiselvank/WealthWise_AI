@@ -158,6 +158,10 @@ class GoalPlanner {
       'Monthly expenses today: ₹${_r(p.monthlyExpenses)}',
       'At age $targetAge (${_y(years)} years, ${_p(a.inflation)} inflation): ₹${_r(futureMonthly)} a month',
       'Corpus needed = yearly expenses × ${a.corpusMultiple.toStringAsFixed(0)} = ₹${_r(corpus)}',
+      if (p.balanceSheet != null)
+        'Counted towards this goal: funds, stocks, EPF/PPF/NPS, gold and other '
+            'investments (₹${_r(p.investments)}). Bank savings and FDs are kept '
+            'as your emergency fund${p.propertyValue > 0 ? ', and property is not counted' : ''}.',
       if (p.investments > 0)
         'Current investments ₹${_r(p.investments)} grow to ₹${_r(MoneyMath.futureValue(p.investments, rate, years))}',
       'Illustrative mix: ${allocation.equity}% equity, ${allocation.debt}% debt, ${allocation.gold}% gold, ${allocation.cash}% cash → assumed return ${_p(rate)} a year',

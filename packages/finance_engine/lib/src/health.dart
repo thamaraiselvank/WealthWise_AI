@@ -1,4 +1,5 @@
 import 'assumptions.dart';
+import 'balance_sheet.dart';
 import 'profile.dart';
 
 enum HealthBand { needsAttention, fair, good, excellent }
@@ -35,6 +36,15 @@ class HealthReport {
   /// Target months of cover (from [Assumptions.emergencyFundMonths]).
   final int emergencyTargetMonths;
   final double debtToIncome; // EMI / income
+
+  /// Everything owned minus everything owed (property included).
+  final double netWorth;
+
+  /// Loans / everything owned.
+  final double debtToAssets;
+
+  /// Loan-by-loan analysis; null in quick mode (no itemised loans).
+  final DebtReport? debt;
   final List<ActionItem> actions;
 
   const HealthReport({
@@ -48,6 +58,9 @@ class HealthReport {
     required this.emergencyMonthsCovered,
     required this.emergencyTargetMonths,
     required this.debtToIncome,
+    required this.netWorth,
+    required this.debtToAssets,
+    required this.debt,
     required this.actions,
   });
 }
@@ -89,11 +102,37 @@ class HealthAnalyzer {
     final score =
         parts.fold<double>(0, (s, x) => s + x.points).round().clamp(0, 100);
 
+    final sheet = p.balanceSheet;
+    final debt = sheet == null || sheet.loans.isEmpty
+        ? null
+        : DebtAnalyzer.analyze(sheet.loans);
+
     final actions = <ActionItem>[];
     if (p.monthlySurplus < 0) {
       actions.add(ActionItem(
         'Spending is more than income',
         'You are short ₹${_r(-p.monthlySurplus)} every month. Reduce expenses before investing.',
+      ));
+    }
+    for (final i in debt?.payoffOrder ?? const <LoanInsight>[]) {
+      if (i.emiTooLow) {
+        actions.add(ActionItem(
+          'A loan is not going down',
+          'Your ${loanTypeName(i.loan.type)} payment does not cover its interest '
+              '(about ₹${_r(i.monthlyInterest!)} a month), so the balance keeps growing.',
+        ));
+      }
+    }
+    final costly = debt?.highCost ?? const <LoanInsight>[];
+    if (costly.isNotEmpty) {
+      final top = costly.first;
+      final rate = top.loan.annualRate;
+      actions.add(ActionItem(
+        'Clear costly debt first',
+        'Your ${loanTypeName(top.loan.type)} (₹${_r(top.loan.outstanding)}'
+            '${rate == null ? '' : ' at ${(rate * 100).toStringAsFixed(1)}%'}) '
+            'costs more than investments usually earn. Paying it off is a '
+            'guaranteed return${top.monthlyInterest == null ? '' : ' and saves about ₹${_r(top.monthlyInterest!)} a month in interest'}.',
       ));
     }
     if (dti > 0.40) {
@@ -150,9 +189,23 @@ class HealthAnalyzer {
       emergencyMonthsCovered: monthsCovered,
       emergencyTargetMonths: a.emergencyFundMonths,
       debtToIncome: dti,
+      netWorth: p.netWorth,
+      debtToAssets: p.debtToAssets,
+      debt: debt,
       actions: actions,
     );
   }
 
   static String _r(double v) => v.round().toString();
 }
+
+/// Lower-case name used inside sentences ("your credit card").
+String loanTypeName(LoanType t) => switch (t) {
+      LoanType.home => 'home loan',
+      LoanType.vehicle => 'vehicle loan',
+      LoanType.personal => 'personal loan',
+      LoanType.education => 'education loan',
+      LoanType.creditCard => 'credit card',
+      LoanType.gold => 'gold loan',
+      LoanType.other => 'loan',
+    };

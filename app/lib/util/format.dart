@@ -95,3 +95,50 @@ Color expenseColor(ExpenseCategory c) => switch (c) {
       ExpenseCategory.lifestyle => const Color(0xFFCC79A7),
       ExpenseCategory.other => const Color(0xFF94A3B8),
     };
+
+String assetTypeLabel(AssetType t) => switch (t) {
+      AssetType.bank => 'Bank savings & cash',
+      AssetType.fixedDeposit => 'Fixed / recurring deposits',
+      AssetType.mutualFundsStocks => 'Mutual funds & stocks',
+      AssetType.retirement => 'EPF / PPF / NPS',
+      AssetType.gold => 'Gold',
+      AssetType.property => 'Property (land, flat, house)',
+      AssetType.other => 'Other assets',
+    };
+
+IconData assetTypeIcon(AssetType t) => switch (t) {
+      AssetType.bank => Icons.account_balance_outlined,
+      AssetType.fixedDeposit => Icons.lock_clock_outlined,
+      AssetType.mutualFundsStocks => Icons.show_chart,
+      AssetType.retirement => Icons.elderly_outlined,
+      AssetType.gold => Icons.diamond_outlined,
+      AssetType.property => Icons.home_work_outlined,
+      AssetType.other => Icons.category_outlined,
+    };
+
+String loanTypeLabel(LoanType t) => switch (t) {
+      LoanType.home => 'Home loan',
+      LoanType.vehicle => 'Car / bike loan',
+      LoanType.personal => 'Personal loan',
+      LoanType.education => 'Education loan',
+      LoanType.creditCard => 'Credit card dues',
+      LoanType.gold => 'Gold loan',
+      LoanType.other => 'Other loan',
+    };
+
+IconData loanTypeIcon(LoanType t) => switch (t) {
+      LoanType.home => Icons.house_outlined,
+      LoanType.vehicle => Icons.directions_car_outlined,
+      LoanType.personal => Icons.person_outline,
+      LoanType.education => Icons.school_outlined,
+      LoanType.creditCard => Icons.credit_card,
+      LoanType.gold => Icons.diamond_outlined,
+      LoanType.other => Icons.request_quote_outlined,
+    };
+
+/// 150 -> "12 yrs 6 mo", 8 -> "8 mo".
+String durationLabel(int months) {
+  final y = months ~/ 12, m = months % 12;
+  if (y == 0) return '$m mo';
+  return m == 0 ? '$y yrs' : '$y yrs $m mo';
+}

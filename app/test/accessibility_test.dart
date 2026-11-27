@@ -15,14 +15,24 @@ Future<void> visitAllScreens(
   final repo = newTestRepository();
   // A profile with every optional section filled in, plus a custom goal.
   await repo.saveOnboarding(
-    profile: FinancialProfile(
+    profile: FinancialProfile.detailed(
       age: 32,
       monthlyIncome: 85000,
       monthlyExpenses: 52000,
-      monthlyEmi: 18000,
-      savings: 150000,
-      investments: 300000,
-      loanOutstanding: 900000,
+      sheet: const BalanceSheet(
+        assets: [
+          Asset(id: 'a1', type: AssetType.bank, value: 90000),
+          Asset(id: 'a2', type: AssetType.fixedDeposit, value: 60000),
+          Asset(id: 'a3', type: AssetType.mutualFundsStocks, value: 180000),
+          Asset(id: 'a4', type: AssetType.retirement, value: 120000),
+          Asset(id: 'a5', type: AssetType.property, value: 2500000),
+        ],
+        loans: [
+          Loan(id: 'l1', type: LoanType.home, outstanding: 850000, emi: 13000, annualRate: 0.0875),
+          Loan(id: 'l2', type: LoanType.creditCard, outstanding: 50000, emi: 5000, annualRate: 0.36),
+          Loan(id: 'l3', type: LoanType.vehicle, outstanding: 120000, emi: 4000),
+        ],
+      ),
       dependents: 2,
       expenseBreakdown: ExpenseBreakdown({
         ExpenseCategory.housing: 22000,
@@ -46,15 +56,15 @@ Future<void> visitAllScreens(
   await pumpApp(tester, repo, size: size, textScale: textScale, themeMode: themeMode);
 
   Future<void> scrollThrough() async {
-    final scrollable = find.byType(Scrollable);
-    if (scrollable.evaluate().isEmpty) return;
+    if (pageScrollable().evaluate().isEmpty) return;
+    final scrollable = pageScrollable();
     for (var i = 0; i < 12; i++) {
-      await tester.drag(scrollable.last, const Offset(0, -600));
+      await tester.drag(scrollable, const Offset(0, -600));
       await tester.pumpAndSettle();
     }
     // Back to the top so later lookups start from a known position.
     for (var i = 0; i < 12; i++) {
-      await tester.drag(scrollable.last, const Offset(0, 600));
+      await tester.drag(scrollable, const Offset(0, 600));
       await tester.pumpAndSettle();
     }
   }
@@ -69,7 +79,7 @@ Future<void> visitAllScreens(
   await tester.tap(find.text('Goals').last);
   await tester.pumpAndSettle();
   for (final name in ['Financial independence at 50', "Children's higher education abroad"]) {
-    await tester.scrollUntilVisible(find.text(name), 200, scrollable: find.byType(Scrollable).last);
+    await tester.scrollUntilVisible(find.text(name), 200, scrollable: pageScrollable());
     // Bring it to the top so the floating "Add goal" button cannot cover it.
     await tester.ensureVisible(find.text(name));
     await tester.pumpAndSettle();
@@ -90,7 +100,7 @@ Future<void> visitAllScreens(
     'Planning assumptions',
     'About WealthWise AI',
   ]) {
-    await tester.scrollUntilVisible(find.text(item), 200, scrollable: find.byType(Scrollable).last);
+    await tester.scrollUntilVisible(find.text(item), 200, scrollable: pageScrollable());
     await tester.tap(find.text(item));
     await tester.pumpAndSettle();
     await scrollThrough();
@@ -132,14 +142,14 @@ void main() {
 /// Scrolls a labelled field into view (needed at large text sizes) and types.
 Future<void> enterInto(WidgetTester tester, String label, String text) async {
   final field = find.widgetWithText(TextFormField, label);
-  await tester.scrollUntilVisible(field, 150, scrollable: find.byType(Scrollable).last);
+  await tester.scrollUntilVisible(field, 150, scrollable: pageScrollable());
   await tester.enterText(field, text);
 }
 
 /// Scrolls [target] fully into view before tapping, so a half-visible item at
 /// the screen edge (common at large text sizes) is not missed.
 Future<void> tapVisible(WidgetTester tester, Finder target) async {
-  await tester.scrollUntilVisible(target, 150, scrollable: find.byType(Scrollable).last);
+  await tester.scrollUntilVisible(target, 150, scrollable: pageScrollable());
   await tester.ensureVisible(target);
   await tester.pumpAndSettle();
   await tester.tap(target);
