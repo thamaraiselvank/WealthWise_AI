@@ -1,5 +1,6 @@
 import 'package:finance_engine/finance_engine.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../state/app_state.dart';
@@ -33,7 +34,7 @@ class GoalDetailScreen extends ConsumerWidget {
     final t = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     final color = feasibilityColor(plan.feasibility, cs);
-    const a = Assumptions.standard;
+    final a = state.assumptions;
 
     return Scaffold(
       appBar: AppBar(
@@ -149,11 +150,26 @@ class GoalDetailScreen extends ConsumerWidget {
           ),
           SectionCard(
             title: 'Assumptions',
-            child: Text(
-              'Inflation ${pct(a.inflation, 1)} · Equity ${pct(a.equityReturn, 1)} · '
-              'Debt ${pct(a.debtReturn, 1)} · Gold ${pct(a.goldReturn, 1)} · '
-              'Cash ${pct(a.cashReturn, 1)} a year. SIP invested at the start of '
-              'each month.${isFi ? ' Corpus = ${a.corpusMultiple.round()}× yearly expenses.' : ''}',
+            trailing: TextButton(
+              onPressed: () => context.push('/settings/assumptions'),
+              child: const Text('Edit'),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Inflation ${pct(a.inflation, 1)} · Equity ${pct(a.equityReturn, 1)} · '
+                  'Debt ${pct(a.debtReturn, 1)} · Gold ${pct(a.goldReturn, 1)} · '
+                  'Cash ${pct(a.cashReturn, 1)} a year. SIP invested at the start of '
+                  'each month.${isFi ? ' Corpus = ${a.corpusMultiple.round()}× yearly expenses.' : ''}',
+                ),
+                for (final note in a.describeChanges())
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text('• You changed: $note',
+                        style: TextStyle(color: cs.primary)),
+                  ),
+              ],
             ),
           ),
           const Disclaimer(),

@@ -43,6 +43,30 @@ void main() {
     expect(find.text('Show the math'), findsOneWidget);
   });
 
+  testWidgets('editing assumptions changes plans and persists', (tester) async {
+    final repo = newTestRepository();
+    await pumpApp(tester, repo);
+    await onboardWithSample(tester);
+
+    await tester.tap(find.byTooltip('Settings'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Planning assumptions'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('corpus ₹2.4'), findsOneWidget);
+
+    // Drag the inflation slider (the first one) all the way right: 10%.
+    await tester.drag(find.byType(Slider).first, const Offset(600, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('10.0%'), findsWidgets);
+    expect(find.textContaining('corpus ₹2.4'), findsNothing);
+    expect((await repo.load()).assumptions.inflation, 0.10);
+
+    await tester.tap(find.text('Reset all'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('corpus ₹2.4'), findsOneWidget);
+    expect((await repo.load()).assumptions.isStandard, isTrue);
+  });
+
   testWidgets('add, edit and delete a goal', (tester) async {
     final repo = newTestRepository();
     await pumpApp(tester, repo);

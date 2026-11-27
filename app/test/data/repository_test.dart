@@ -89,6 +89,34 @@ void main() {
       expect(goals.map((g) => g.id), ['g2']);
     });
 
+    test('assumptions: only overrides are stored, reset removes them', () async {
+      await repo.saveProfile(_profile);
+      expect((await repo.load()).assumptions, Assumptions.standard);
+
+      final a = Assumptions.standard
+          .withValue(AssumptionField.inflation, 0.07)
+          .withValue(AssumptionField.corpusMultiple, 30);
+      await repo.saveAssumptions(a);
+      expect((await repo.load()).assumptions, a);
+      final row = await (db.select(db.settings)
+            ..where((t) => t.key.equals('assumptions')))
+          .getSingle();
+      expect(row.value, '{"inflation":0.07,"corpusMultiple":30.0}');
+      expect((await repo.exportData())['assumptions'],
+          containsPair('inflation', 0.07));
+
+      await repo.saveAssumptions(Assumptions.standard);
+      expect(await db.select(db.settings).get(), isEmpty);
+      expect((await repo.load()).assumptions, Assumptions.standard);
+    });
+
+    test('corrupt assumptions fall back to defaults', () async {
+      await repo.saveProfile(_profile);
+      await db.into(db.settings).insert(
+          SettingsCompanion.insert(key: 'assumptions', value: '[1,2]'));
+      expect((await repo.load()).assumptions, Assumptions.standard);
+    });
+
     test('deleteAll wipes everything', () async {
       await repo.saveOnboarding(profile: _profile, riskAnswers: {}, fiTargetAge: 50);
       await repo.upsertGoal(_goal);

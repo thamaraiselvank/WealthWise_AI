@@ -31,6 +31,9 @@ class HealthReport {
   final double emergencyTarget;
   final double emergencyGap;
   final double emergencyMonthsCovered;
+
+  /// Target months of cover (from [Assumptions.emergencyFundMonths]).
+  final int emergencyTargetMonths;
   final double debtToIncome; // EMI / income
   final List<ActionItem> actions;
 
@@ -43,6 +46,7 @@ class HealthReport {
     required this.emergencyTarget,
     required this.emergencyGap,
     required this.emergencyMonthsCovered,
+    required this.emergencyTargetMonths,
     required this.debtToIncome,
     required this.actions,
   });
@@ -144,6 +148,7 @@ class HealthAnalyzer {
       emergencyTarget: emergencyTarget,
       emergencyGap: emergencyGap,
       emergencyMonthsCovered: monthsCovered,
+      emergencyTargetMonths: a.emergencyFundMonths,
       debtToIncome: dti,
       actions: actions,
     );

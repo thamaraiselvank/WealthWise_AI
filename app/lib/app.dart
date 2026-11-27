@@ -6,6 +6,7 @@ import 'features/goals/goal_detail_screen.dart';
 import 'features/home/home_shell.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/settings/about_screen.dart';
+import 'features/settings/assumptions_screen.dart';
 import 'features/settings/profile_edit_screen.dart';
 import 'features/settings/risk_quiz_screen.dart';
 import 'features/settings/settings_screen.dart';
@@ -53,6 +54,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'risk',
                 builder: (context, state) => const RiskQuizScreen(),
+              ),
+              GoRoute(
+                path: 'assumptions',
+                builder: (context, state) => const AssumptionsScreen(),
               ),
               GoRoute(
                 path: 'about',

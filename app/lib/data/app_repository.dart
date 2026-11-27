@@ -15,6 +15,7 @@ class AppRepository {
   static const _profileId = 1;
   static const _kRiskAnswers = 'risk_answers';
   static const _kFiTargetAge = 'fi_target_age';
+  static const _kAssumptions = 'assumptions';
 
   Future<AppState> load() async {
     final row = await (_db.select(_db.profiles)
@@ -40,6 +41,7 @@ class AppRepository {
       risk: RiskQuestionnaire.score(answers),
       fiTargetAge: fiAge,
       goals: goals.map(_toGoal).toList(),
+      assumptions: _decodeAssumptions(settings[_kAssumptions]),
     );
   }
 
@@ -75,6 +77,14 @@ class AppRepository {
       _setSetting(_kRiskAnswers, jsonEncode(answers));
 
   Future<void> saveFiTargetAge(int age) => _setSetting(_kFiTargetAge, '$age');
+
+  /// Stores only overrides; defaults are not written so future default
+  /// changes still reach users who never edited anything.
+  Future<void> saveAssumptions(Assumptions a) => a.isStandard
+      ? (_db.delete(_db.settings)..where((t) => t.key.equals(_kAssumptions))).go()
+      : _setSetting(_kAssumptions, jsonEncode({
+          for (final f in a.changedFrom()) f.name: a.valueOf(f),
+        }));
 
   Future<void> upsertGoal(Goal g) =>
       _db.into(_db.goals).insertOnConflictUpdate(GoalsCompanion(
@@ -126,6 +136,7 @@ class AppRepository {
       'riskAnswers': s.riskAnswers,
       'riskProfile': s.risk.name,
       'financialIndependenceAge': s.fiTargetAge,
+      'assumptions': s.assumptions.toJson(),
       'goals': [
         for (final g in s.goals)
           {
@@ -151,6 +162,17 @@ class AppRepository {
       return {for (final e in map.entries) if (e.value is int) e.key: e.value as int};
     } on FormatException {
       return const {};
+    }
+  }
+
+  static Assumptions _decodeAssumptions(String? json) {
+    if (json == null) return Assumptions.standard;
+    try {
+      return Assumptions.fromJson(jsonDecode(json) as Map<String, dynamic>);
+    } on FormatException {
+      return Assumptions.standard;
+    } on TypeError {
+      return Assumptions.standard;
     }
   }
 

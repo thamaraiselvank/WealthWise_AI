@@ -14,12 +14,16 @@ class AppState {
   final int fiTargetAge;
   final List<Goal> goals;
 
+  /// The user's planning assumptions (defaults unless edited in Settings).
+  final Assumptions assumptions;
+
   const AppState({
     this.profile,
     this.riskAnswers = const {},
     this.risk = RiskProfile.moderate,
     this.fiTargetAge = 55,
     this.goals = const [],
+    this.assumptions = Assumptions.standard,
   });
 
   bool get isOnboarded => profile != null;
@@ -30,6 +34,7 @@ class AppState {
     RiskProfile? risk,
     int? fiTargetAge,
     List<Goal>? goals,
+    Assumptions? assumptions,
   }) =>
       AppState(
         profile: profile ?? this.profile,
@@ -37,6 +42,7 @@ class AppState {
         risk: risk ?? this.risk,
         fiTargetAge: fiTargetAge ?? this.fiTargetAge,
         goals: goals ?? this.goals,
+        assumptions: assumptions ?? this.assumptions,
       );
 }
 
@@ -109,6 +115,13 @@ class AppStateNotifier extends Notifier<AppState> {
     return _repo.deleteGoal(id);
   }
 
+  Future<void> setAssumptions(Assumptions a) {
+    state = state.copyWith(assumptions: a);
+    return _repo.saveAssumptions(a);
+  }
+
+  Future<void> resetAssumptions() => setAssumptions(Assumptions.standard);
+
   Future<void> deleteAllData() async {
     await _repo.deleteAll();
     state = const AppState();
@@ -119,8 +132,9 @@ final appStateProvider =
     NotifierProvider<AppStateNotifier, AppState>(AppStateNotifier.new);
 
 final healthReportProvider = Provider<HealthReport?>((ref) {
-  final p = ref.watch(appStateProvider).profile;
-  return p == null ? null : HealthAnalyzer.analyze(p);
+  final s = ref.watch(appStateProvider);
+  final p = s.profile;
+  return p == null ? null : HealthAnalyzer.analyze(p, a: s.assumptions);
 });
 
 /// Id used for the built-in financial-independence goal.
@@ -130,7 +144,8 @@ final fiPlanProvider = Provider<GoalPlan?>((ref) {
   final s = ref.watch(appStateProvider);
   final p = s.profile;
   if (p == null || s.fiTargetAge <= p.age) return null;
-  return GoalPlanner.planIndependence(p, targetAge: s.fiTargetAge, risk: s.risk);
+  return GoalPlanner.planIndependence(p,
+      targetAge: s.fiTargetAge, risk: s.risk, a: s.assumptions);
 });
 
 final goalPlansProvider = Provider<List<GoalPlan>>((ref) {
@@ -139,6 +154,7 @@ final goalPlansProvider = Provider<List<GoalPlan>>((ref) {
   if (p == null) return const [];
   return [
     for (final g in s.goals)
-      GoalPlanner.plan(g, risk: s.risk, availableMonthly: p.monthlySurplus),
+      GoalPlanner.plan(g,
+          risk: s.risk, availableMonthly: p.monthlySurplus, a: s.assumptions),
   ];
 });

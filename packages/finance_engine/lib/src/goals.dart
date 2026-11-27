@@ -80,8 +80,9 @@ class GoalPlanner {
     required RiskProfile risk,
     required double availableMonthly,
     Assumptions a = Assumptions.standard,
-    double stepUp = 0.10,
+    double? stepUp,
   }) {
+    final step = stepUp ?? a.sipStepUp;
     final allocation = AllocationPlanner.suggest(risk, goal.years);
     final rate = allocation.expectedReturn(a);
     final futureCost = MoneyMath.inflate(goal.todayCost, a.inflation, goal.years);
@@ -89,7 +90,7 @@ class GoalPlanner {
     final sip = MoneyMath.requiredSip(futureCost, rate, goal.years,
         existingCorpus: goal.alreadySaved);
     final sipStep = MoneyMath.requiredSip(futureCost, rate, goal.years,
-        existingCorpus: goal.alreadySaved, annualStepUp: stepUp);
+        existingCorpus: goal.alreadySaved, annualStepUp: step);
 
     final steps = [
       'Cost today: ₹${_r(goal.todayCost)}',
@@ -98,7 +99,7 @@ class GoalPlanner {
         'Already saved ₹${_r(goal.alreadySaved)}, grows to ₹${_r(MoneyMath.futureValue(goal.alreadySaved, rate, goal.years))}',
       'Illustrative mix: ${allocation.equity}% equity, ${allocation.debt}% debt, ${allocation.gold}% gold, ${allocation.cash}% cash → assumed return ${_p(rate)} a year',
       'Monthly SIP needed (same amount every month): ₹${_r(sip)}',
-      'Or start at ₹${_r(sipStep)} and increase it ${_p(stepUp)} every year',
+      'Or start at ₹${_r(sipStep)} and increase it ${_p(step)} every year',
     ];
 
     return GoalPlan(
@@ -108,7 +109,7 @@ class GoalPlanner {
       assumedReturn: rate,
       requiredSip: sip,
       requiredSipWithStepUp: sipStep,
-      stepUp: stepUp,
+      stepUp: step,
       feasibility: _feasibility(sip, sipStep, availableMonthly),
       steps: steps,
     );
@@ -124,9 +125,10 @@ class GoalPlanner {
     required int targetAge,
     required RiskProfile risk,
     Assumptions a = Assumptions.standard,
-    double stepUp = 0.10,
+    double? stepUp,
     GoalType type = GoalType.financialIndependence,
   }) {
+    final step = stepUp ?? a.sipStepUp;
     final years = (targetAge - p.age).toDouble();
     if (years <= 0) {
       throw ArgumentError('targetAge must be greater than current age');
@@ -139,7 +141,7 @@ class GoalPlanner {
     final sip = MoneyMath.requiredSip(corpus, rate, years,
         existingCorpus: p.investments);
     final sipStep = MoneyMath.requiredSip(corpus, rate, years,
-        existingCorpus: p.investments, annualStepUp: stepUp);
+        existingCorpus: p.investments, annualStepUp: step);
 
     final goal = Goal(
       id: type.name,
@@ -160,7 +162,7 @@ class GoalPlanner {
         'Current investments ₹${_r(p.investments)} grow to ₹${_r(MoneyMath.futureValue(p.investments, rate, years))}',
       'Illustrative mix: ${allocation.equity}% equity, ${allocation.debt}% debt, ${allocation.gold}% gold, ${allocation.cash}% cash → assumed return ${_p(rate)} a year',
       'Monthly SIP needed (same amount every month): ₹${_r(sip)}',
-      'Or start at ₹${_r(sipStep)} and increase it ${_p(stepUp)} every year',
+      'Or start at ₹${_r(sipStep)} and increase it ${_p(step)} every year',
     ];
 
     return GoalPlan(
@@ -170,7 +172,7 @@ class GoalPlanner {
       assumedReturn: rate,
       requiredSip: sip,
       requiredSipWithStepUp: sipStep,
-      stepUp: stepUp,
+      stepUp: step,
       feasibility: _feasibility(sip, sipStep, p.monthlySurplus),
       steps: steps,
     );

@@ -35,7 +35,7 @@ class HealthScreen extends ConsumerWidget {
             MetricTile(
               label: 'Emergency cover',
               value: '${report.emergencyMonthsCovered.toStringAsFixed(1)} mo',
-              caption: 'Target 6 months',
+              caption: 'Target ${report.emergencyTargetMonths} months',
             ),
             MetricTile(
               label: 'EMI / income',

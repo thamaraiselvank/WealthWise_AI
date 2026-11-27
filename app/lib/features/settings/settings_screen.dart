@@ -56,6 +56,15 @@ class SettingsScreen extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/settings/risk'),
           ),
+          ListTile(
+            leading: const Icon(Icons.tune),
+            title: const Text('Planning assumptions'),
+            subtitle: Text(s.assumptions.isStandard
+                ? 'Inflation, returns, step-up (using defaults)'
+                : '${s.assumptions.changedFrom().length} changed from default'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/assumptions'),
+          ),
           const _Header('Your data'),
           ListTile(
             leading: const Icon(Icons.ios_share),

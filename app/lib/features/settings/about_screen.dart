@@ -1,16 +1,18 @@
-import 'package:finance_engine/finance_engine.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
+
+import '../../state/app_state.dart';
 
 import '../../util/format.dart';
 import '../../widgets/common.dart';
 
-class AboutScreen extends StatelessWidget {
+class AboutScreen extends ConsumerWidget {
   const AboutScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = Theme.of(context).textTheme;
-    const a = Assumptions.standard;
+    final a = ref.watch(appStateProvider.select((s) => s.assumptions));
     final rows = [
       ('Inflation', pct(a.inflation, 1)),
       ('Emergency fund', '${a.emergencyFundMonths} months of expenses + EMIs'),
@@ -19,6 +21,7 @@ class AboutScreen extends StatelessWidget {
       ('Debt return', pct(a.debtReturn, 1)),
       ('Gold return', pct(a.goldReturn, 1)),
       ('Cash return', pct(a.cashReturn, 1)),
+      ('Yearly SIP step-up', pct(a.sipStepUp)),
       ('SIP timing', 'Start of each month'),
     ];
 
@@ -71,7 +74,8 @@ class AboutScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   'Returns are long-run illustrative averages, not predictions. Real '
-                  'returns vary year to year and can be negative.',
+                  'returns vary year to year and can be negative. You can change '
+                  'these in Settings → Planning assumptions.',
                   style: t.bodySmall,
                 ),
               ],

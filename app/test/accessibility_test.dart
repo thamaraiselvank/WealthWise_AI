@@ -84,7 +84,12 @@ Future<void> visitAllScreens(
   await tester.tap(find.byTooltip('Settings'));
   await tester.pumpAndSettle();
   await scrollThrough();
-  for (final item in ['Edit financial details', 'Retake risk questionnaire', 'About WealthWise AI']) {
+  for (final item in [
+    'Edit financial details',
+    'Retake risk questionnaire',
+    'Planning assumptions',
+    'About WealthWise AI',
+  ]) {
     await tester.scrollUntilVisible(find.text(item), 200, scrollable: find.byType(Scrollable).last);
     await tester.tap(find.text(item));
     await tester.pumpAndSettle();
