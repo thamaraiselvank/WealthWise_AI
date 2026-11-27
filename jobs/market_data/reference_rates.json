@@ -1,0 +1,33 @@
+{
+  "_comment": "Manually maintained headline rates, published with the market snapshot. Fill `value` (as a fraction: 0.055 = 5.5%), `as_of` and `source_url` from the official source each time it changes. Entries with value null are not published. Never fill these from memory or estimates.",
+  "rates": {
+    "rbi_repo_rate": {
+      "label": "RBI repo rate",
+      "value": null,
+      "as_of": null,
+      "source": "Reserve Bank of India",
+      "source_url": "https://www.rbi.org.in/"
+    },
+    "cpi_inflation_yoy": {
+      "label": "CPI inflation (year on year)",
+      "value": null,
+      "as_of": null,
+      "source": "Ministry of Statistics and Programme Implementation (MoSPI)",
+      "source_url": "https://www.mospi.gov.in/"
+    },
+    "ppf_rate": {
+      "label": "PPF interest rate",
+      "value": null,
+      "as_of": null,
+      "source": "Ministry of Finance (small savings rates, set quarterly)",
+      "source_url": "https://www.nsiindia.gov.in/"
+    },
+    "epf_rate": {
+      "label": "EPF interest rate",
+      "value": null,
+      "as_of": null,
+      "source": "EPFO",
+      "source_url": "https://www.epfindia.gov.in/"
+    }
+  }
+}

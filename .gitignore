@@ -49,3 +49,6 @@ service-account*.json
 dist/
 *.apk
 *.aab
+
+# Market job local output
+jobs/market_data/out/
